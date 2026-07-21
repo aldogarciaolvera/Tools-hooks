@@ -81,7 +81,15 @@ echo
 read -r -p "¿Publicar rama y etiqueta en origin? [Y/n]: " ans
 case "${ans:-Y}" in
     n|N|no|NO)
-        echo "Release creada localmente."
+        printf '\n'
+printf 'Release creada localmente.\n\n'
+printf 'Commit:\n'
+printf '  %s\n\n' "$(git rev-parse --short HEAD)"
+printf 'Tag:\n'
+printf '  %s\n\n' "$TAG"
+printf 'Para publicarla más tarde ejecuta:\n\n'
+printf '  git push origin %s\n' "$(git branch --show-current)"
+printf '  git push origin %s\n' "$TAG"
         ;;
     *)
         git push origin "$CURRENT_BRANCH"
