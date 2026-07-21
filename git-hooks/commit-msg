@@ -12,7 +12,7 @@ esac
 
 # Formato esperado:
 # [AGO] - rama - tipo: descripción
-PATTERN='^\[[A-Za-z0-9_-][A-Za-z0-9_-]*\] - [^ ]+ - (feat|fix|docs|refactor|test|chore|build|ci|perf|style|revert)(\([A-Za-z0-9._/-]+\))?!?: .+'
+PATTERN='^\[[A-Za-z0-9_-]+\] - [^ ]+ - (feat|fix|docs|refactor|test|chore|build|ci|perf|style|revert)(\([A-Za-z0-9._/-]+\))?!?: .+'
 
 if ! printf '%s\n' "$FIRST_LINE" | grep -Eq "$PATTERN"; then
     cat >&2 <<'EOF'

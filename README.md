@@ -120,31 +120,71 @@ export GIT_AUTHOR_INITIALS=ABC
 
 ### `commit-msg`
 
-Valida que los mensajes utilicen Conventional Commits.
+Valida que el mensaje del commit siga el estándar **Conventional Commits**.
 
-Tipos permitidos:
+Formato esperado:
 
 ```text
-feat
-fix
-docs
-refactor
-test
-chore
-build
-ci
-perf
-style
-revert
+tipo: descripción
 ```
+
+o
+
+```text
+tipo(scope): descripción
+```
+
+Ejemplo:
+
+```text
+feat: agrega autenticación JWT
+fix(api): corrige validación de usuarios
+docs: actualiza README
+```
+
+### Tipos permitidos
+
+| Tipo | Descripción | Ejemplo |
+|------|-------------|----------|
+| **feat** | Agrega una nueva funcionalidad al proyecto. | `feat: agrega exportación a PDF` |
+| **fix** | Corrige un error o bug existente. | `fix: corrige error al crear respaldos` |
+| **docs** | Cambios únicamente en la documentación. | `docs: actualiza guía de instalación` |
+| **refactor** | Reestructura o mejora el código sin cambiar su comportamiento. | `refactor: simplifica módulo de configuración` |
+| **test** | Agrega o modifica pruebas automatizadas. | `test: agrega pruebas para release.sh` |
+| **chore** | Tareas de mantenimiento que no afectan la funcionalidad. | `chore: actualiza dependencias` |
+| **build** | Cambios relacionados con compilación o empaquetado. | `build: actualiza Dockerfile` |
+| **ci** | Cambios en integración o despliegue continuo. | `ci: agrega workflow de GitHub Actions` |
+| **perf** | Mejoras enfocadas en el rendimiento. | `perf: optimiza compresión de respaldos` |
+| **style** | Cambios de formato o estilo sin modificar la lógica. | `style: aplica formato al código` |
+| **revert** | Revierte uno o varios commits anteriores. | `revert: revierte cambio en backup incremental` |
+
+### Scope (opcional)
+
+El **scope** permite indicar qué parte del proyecto fue modificada.
 
 Ejemplos:
 
 ```text
-feat: agrega una funcionalidad
-fix: corrige un error
-docs: actualiza documentación
-feat(auth): agrega autenticación
+feat(auth): agrega autenticación JWT
+fix(mysql): corrige restauración
+docs(readme): mejora documentación
+refactor(config): reorganiza variables
+```
+
+### Resultado final
+
+El hook `prepare-commit-msg` agregará automáticamente las iniciales y la rama actual.
+
+Si escribes:
+
+```bash
+git commit -m "feat(auth): agrega login con JWT"
+```
+
+El commit almacenado será:
+
+```text
+[AGO] - main - feat(auth): agrega login con JWT
 ```
 
 ### `pre-commit`
