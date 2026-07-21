@@ -14,12 +14,13 @@ EOF
 
 NEW_VERSION="$1"
 
-SCRIPT_DIR="$(
-    cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &&
-    pwd
-)"
+TOOLS_HOOKS_ROOT="$(git config --global --get tools-hooks.root || true)"
 
-PROJECT_CHECK="$SCRIPT_DIR/project-check.sh"
+if [[ -z "$TOOLS_HOOKS_ROOT" ]]; then
+    die "tools-hooks.root no está configurado. Ejecuta ./install.sh"
+fi
+
+PROJECT_CHECK="$TOOLS_HOOKS_ROOT/scripts/project-check.sh"
 
 [[ -f "$PROJECT_CHECK" ]] ||
     die "No se encontró project-check.sh en: $PROJECT_CHECK"

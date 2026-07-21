@@ -208,8 +208,9 @@ verify_installation() {
             failed=1
         fi
     done
-
     local hooks_path
+    local configured_root
+
     hooks_path="$(
         git config --global --get core.hooksPath ||
         true
@@ -218,11 +219,22 @@ verify_installation() {
     if [[ "$hooks_path" == "$HOOKS_DIR" ]]; then
         printf 'OK: core.hooksPath=%s\n' "$hooks_path"
     else
-        printf 'ERROR: core.hooksPath no está configurado correctamente.\n' \
-            >&2
+        printf 'ERROR: core.hooksPath no está configurado correctamente.\n' >&2
         failed=1
     fi
 
+    configured_root="$(
+        git config --global --get tools-hooks.root ||
+        true
+    )"
+
+    if [[ "$configured_root" == "$TOOLS_HOOKS_DIR" ]]; then
+        printf 'OK: tools-hooks.root=%s\n' "$configured_root"
+    else
+        printf 'ERROR: tools-hooks.root no está configurado correctamente.\n' >&2
+        failed=1
+    fi 
+    
     [[ "$failed" -eq 0 ]] ||
         die "La instalación no pudo verificarse correctamente"
 }
