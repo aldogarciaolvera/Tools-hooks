@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -u
+
+printf '%s\n' "Ejecutando validaciones pre-push..."
+
+# Ejecutar validación particular del repositorio cuando exista.
+if [ -x ".githooks/pre-push" ]; then
+    ./.githooks/pre-push
+    RESULT=$?
+
+    if [ "$RESULT" -ne 0 ]; then
+        printf '%s\n' "Push cancelado por errores de validación." >&2
+        exit "$RESULT"
+    fi
+fi
+
+printf '%s\n' "Validaciones pre-push completadas."
+exit 0
