@@ -150,12 +150,25 @@ create_repository_validations() {
     mkdir -p .githooks
 
     if [[ ! -e .githooks/pre-commit ]]; then
-        cat > .githooks/pre-commit <<'EOF'
+       cat > .githooks/pre-commit <<'EOF'
 #!/usr/bin/env bash
-
 set -Eeuo pipefail
 
-git-project-check
+TOOLS_HOOKS_ROOT="$(git config --global --get tools-hooks.root || true)"
+
+if [[ -z "$TOOLS_HOOKS_ROOT" ]]; then
+    printf 'ERROR: Tools-hooks no está instalado o tools-hooks.root no está configurado.\n' >&2
+    exit 1
+fi
+
+PROJECT_CHECK="$TOOLS_HOOKS_ROOT/scripts/project-check.sh"
+
+if [[ ! -f "$PROJECT_CHECK" ]]; then
+    printf 'ERROR: No se encontró project-check.sh en: %s\n' "$PROJECT_CHECK" >&2
+    exit 1
+fi
+
+bash "$PROJECT_CHECK"
 EOF
 
         chmod +x .githooks/pre-commit
@@ -165,12 +178,25 @@ EOF
     fi
 
     if [[ ! -e .githooks/pre-push ]]; then
-        cat > .githooks/pre-push <<'EOF'
+     cat > .githooks/pre-push <<'EOF'
 #!/usr/bin/env bash
-
 set -Eeuo pipefail
 
-git-project-check
+TOOLS_HOOKS_ROOT="$(git config --global --get tools-hooks.root || true)"
+
+if [[ -z "$TOOLS_HOOKS_ROOT" ]]; then
+    printf 'ERROR: Tools-hooks no está instalado o tools-hooks.root no está configurado.\n' >&2
+    exit 1
+fi
+
+PROJECT_CHECK="$TOOLS_HOOKS_ROOT/scripts/project-check.sh"
+
+if [[ ! -f "$PROJECT_CHECK" ]]; then
+    printf 'ERROR: No se encontró project-check.sh en: %s\n' "$PROJECT_CHECK" >&2
+    exit 1
+fi
+
+bash "$PROJECT_CHECK"
 EOF
 
         chmod +x .githooks/pre-push

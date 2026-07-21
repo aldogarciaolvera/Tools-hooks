@@ -99,12 +99,15 @@ Write-Step "Configurando hooks globales"
 
 $HooksGitPath = $HooksDir.Replace('\', '/')
 & $GitExe config --global core.hooksPath $HooksGitPath
+$RepoGitPath = $RepoRoot.Replace('\', '/')
+& $GitExe config --global tools-hooks.root $RepoGitPath
 
 if ($LASTEXITCODE -ne 0) {
     Fail "No fue posible configurar core.hooksPath."
 }
 
 Write-Ok "core.hooksPath = $HooksGitPath"
+Write-Ok "tools-hooks.root = $RepoGitPath"
 
 Write-Step "Instalando comandos"
 

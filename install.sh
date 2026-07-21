@@ -89,6 +89,7 @@ install_hooks() {
         "$HOOKS_DIR/pre-push"
 
     git config --global core.hooksPath "$HOOKS_DIR"
+    git config --global tools-hooks.root "$TOOLS_HOOKS_DIR"
 
     local configured_hooks_path
     configured_hooks_path="$(
