@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
 
 COMMIT_MSG_FILE="$1"
 COMMIT_SOURCE="${2:-}"
@@ -31,14 +33,13 @@ case "$FIRST_LINE" in
         ;;
 esac
 
-TEMP_FILE=$(mktemp) || exit 1
+TEMP_FILE="${COMMIT_MSG_FILE}.tmp"
 
 {
     printf '%s' "$PREFIX"
     cat "$COMMIT_MSG_FILE"
 } > "$TEMP_FILE"
 
-cat "$TEMP_FILE" > "$COMMIT_MSG_FILE"
-rm -f "$TEMP_FILE"
+mv "$TEMP_FILE" "$COMMIT_MSG_FILE"
 
 exit 0

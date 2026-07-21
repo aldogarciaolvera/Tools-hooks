@@ -2,6 +2,13 @@
 
 set -Eeuo pipefail
 
+SCRIPT_DIR="$(
+    cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &&
+    pwd
+)"
+
+PROJECT_CHECK="$SCRIPT_DIR/project-check.sh"
+
 INITIAL_VERSION="0.1.0"
 LICENSE_MODE="ask"
 
@@ -253,6 +260,9 @@ create_repository_validations
 printf '\n'
 printf 'Validando resultado...\n\n'
 
-git-project-check
+[[ -f "$PROJECT_CHECK" ]] ||
+    die "No se encontró project-check.sh en: $PROJECT_CHECK"
+
+bash "$PROJECT_CHECK"
 
 printf '\nProyecto inicializado correctamente.\n'

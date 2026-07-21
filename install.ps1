@@ -99,6 +99,11 @@ Write-Step "Configurando hooks globales"
 
 $HooksGitPath = $HooksDir.Replace('\', '/')
 & $GitExe config --global core.hooksPath $HooksGitPath
+
+if ($LASTEXITCODE -ne 0) {
+    Fail "No fue posible configurar core.hooksPath."
+}
+
 $RepoGitPath = $RepoRoot.Replace('\', '/')
 & $GitExe config --global tools-hooks.root $RepoGitPath
 
@@ -165,6 +170,12 @@ Write-Step "Verificando instalación"
 $ConfiguredHooks = & $GitExe config --global --get core.hooksPath
 if ($LASTEXITCODE -ne 0 -or $ConfiguredHooks -ne $HooksGitPath) {
     Fail "La verificación de core.hooksPath falló."
+}
+
+$ConfiguredRoot = & $GitExe config --global --get tools-hooks.root
+
+if ($LASTEXITCODE -ne 0 -or $ConfiguredRoot -ne $RepoGitPath) {
+    Fail "La verificación de tools-hooks.root falló."
 }
 
 foreach ($CommandName in $Commands.Keys) {

@@ -32,8 +32,19 @@ cd "$REPO_ROOT"
 
 bash "$PROJECT_CHECK"
 
-git diff --quiet || die "Hay cambios sin confirmar."
+[[ -z "$(git status --porcelain)" ]] ||
+    die "Hay cambios sin confirmar."
 
+is_semver() {
+    [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+}
+
+is_semver "$NEW_VERSION" ||
+    die "La versión debe usar el formato X.Y.Z, por ejemplo 1.2.0"
+TAG="v$NEW_VERSION"
+
+git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null &&
+    die "La etiqueta $TAG ya existe."
 CURRENT_BRANCH="$(git branch --show-current)"
 CURRENT_VERSION="$(tr -d '[:space:]' < VERSION)"
 
@@ -42,17 +53,23 @@ CURRENT_VERSION="$(tr -d '[:space:]' < VERSION)"
 printf '%s\n' "$NEW_VERSION" > VERSION
 
 DATE="$(date +%F)"
-TMP="$(mktemp)"
+
+CHANGELOG_TMP="${REPO_ROOT}/.CHANGELOG.md.tools-hooks.$$"
+
+cleanup() {
+    rm -f -- "$CHANGELOG_TMP"
+}
+
+trap cleanup EXIT
+
 {
-echo "## [$NEW_VERSION] - $DATE"
-echo
-echo "### Changed"
-echo
-echo "- Preparación de la versión $NEW_VERSION."
-echo
-cat CHANGELOG.md
-} > "$TMP"
-mv "$TMP" CHANGELOG.md
+    printf '## [%s] - %s\n\n' "$NEW_VERSION" "$DATE"
+    printf '### Changed\n\n'
+    printf -- '- Preparación de la versión %s.\n\n' "$NEW_VERSION"
+    cat CHANGELOG.md
+} > "$CHANGELOG_TMP"
+
+mv -- "$CHANGELOG_TMP" CHANGELOG.md
 
 git add VERSION CHANGELOG.md
 git commit -m "chore: release $NEW_VERSION"
