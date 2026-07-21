@@ -1,276 +1,242 @@
-# Dev Tools
+# Tools Hooks
 
-Colección de herramientas para estandarizar el desarrollo de proyectos con Git.
+Herramientas reutilizables para configurar un flujo de trabajo consistente con Git.
 
-Este proyecto reúne hooks globales, scripts y utilidades que automatizan tareas repetitivas, mantienen un flujo de trabajo consistente y ayudan a garantizar la calidad del código antes de realizar commits, pushes o releases.
+El proyecto instala hooks globales, proporciona un comando para generar releases y permite agregar una licencia MIT a los repositorios.
 
----
+## Características
 
-# Características
-
-- Prefijo automático de commits.
+- Instalación de hooks globales para Git.
+- Prefijo automático en mensajes de commit.
 - Validación de Conventional Commits.
-- Hooks globales reutilizables.
-- Hooks específicos por proyecto.
-- Validaciones automáticas antes de cada commit.
-- Validaciones antes de publicar cambios.
-- Gestión de versiones mediante Semantic Versioning.
-- Creación automática de releases.
+- Validación de scripts Bash antes de cada commit.
+- Ejecución de validaciones específicas de cada repositorio.
+- Validaciones antes de realizar un push.
+- Creación de releases mediante Semantic Versioning.
+- Actualización automática de `VERSION` y `CHANGELOG.md`.
+- Creación automática de etiquetas Git.
+- Instalación opcional de licencia MIT.
 
----
+## Estructura
 
-# Estructura
-
-```
-dev-tools/
+```text
+Tools-hooks/
 ├── git-hooks/
-│   ├── prepare-commit-msg
 │   ├── commit-msg
 │   ├── pre-commit
+│   ├── prepare-commit-msg
 │   └── pre-push
-│
 ├── scripts/
 │   └── release.sh
-│
+├── CHANGELOG.md
 ├── install.sh
+├── LICENSE
 ├── README.md
-└── LICENSE
+└── VERSION
 ```
 
----
+## Requisitos
 
-# Requisitos
-
-- Git 2.x o superior
+- Git
 - Bash
 - Linux o macOS
 
----
+## Instalación
 
-# Instalación
-
-Clonar el repositorio
+Clona el repositorio:
 
 ```bash
-git clone https://github.com/aldogarciaolvera/dev-tools.git
+git clone git@github.com:aldogarciaolvera/Tools-hooks.git
 ```
 
-Entrar al proyecto
+Entra al directorio:
 
 ```bash
-cd dev-tools
+cd Tools-hooks
 ```
 
-Ejecutar el instalador
+Ejecuta el instalador:
 
 ```bash
 ./install.sh
 ```
 
-El instalador configura automáticamente:
+El instalador:
 
-- Hooks globales de Git.
-- Comando `git-release`.
-- Permisos de ejecución.
-- Configuración necesaria de Git.
+- configura los hooks globales;
+- instala el comando `git-release`;
+- agrega `~/.local/bin` al `PATH` cuando sea necesario;
+- pregunta si deseas agregar una licencia MIT cuando el repositorio no tiene una.
 
----
+## Opciones de instalación
 
-# Hooks incluidos
-
-## prepare-commit-msg
-
-Agrega automáticamente las iniciales y la rama al mensaje del commit.
-
-Ejemplo:
-
-Antes
-
-```
-feat: agrega respaldo incremental
-```
-
-Después
-
-```
-[AGO] - main - feat: agrega respaldo incremental
-```
-
----
-
-## commit-msg
-
-Valida que el mensaje siga el estándar Conventional Commits.
-
-Tipos permitidos
-
-```
-feat
-fix
-docs
-refactor
-test
-build
-ci
-perf
-style
-revert
-chore
-```
-
----
-
-## pre-commit
-
-Antes de permitir un commit ejecuta:
-
-- Validación de sintaxis Bash.
-- Validaciones globales.
-- Validaciones específicas del repositorio si existe `.githooks/pre-commit`.
-
----
-
-## pre-push
-
-Antes de realizar un push ejecuta:
-
-- Validaciones del repositorio.
-- Pruebas automatizadas.
-- Cualquier script definido en `.githooks/pre-push`.
-
-Si alguna validación falla el push es cancelado.
-
----
-
-# Releases
-
-El proyecto incluye el comando:
+Instalación interactiva:
 
 ```bash
-git-release
+./install.sh
 ```
 
-Ejemplo
+Instalar la licencia MIT sin preguntar:
 
 ```bash
-git-release 1.1.0
+./install.sh --license
 ```
 
-El script realiza automáticamente:
-
-- Validación de la versión.
-- Actualización del archivo VERSION.
-- Actualización del CHANGELOG.
-- Creación del commit.
-- Creación del tag Git.
-
-Posteriormente solo es necesario ejecutar
+No instalar licencia ni mostrar la pregunta:
 
 ```bash
-git push origin main
-git push origin --tags
+./install.sh --no-license
 ```
 
----
+Mostrar ayuda:
 
-# Semantic Versioning
-
-Se utiliza el estándar:
-
-```
-MAJOR.MINOR.PATCH
+```bash
+./install.sh --help
 ```
 
-Ejemplos
+## Hooks instalados
 
-```
-1.0.0
-1.0.1
-1.1.0
-2.0.0
-```
+### `prepare-commit-msg`
 
----
+Agrega automáticamente las iniciales y la rama actual al mensaje del commit.
 
-# Hooks específicos por proyecto
+Comando:
 
-Cada repositorio puede definir validaciones adicionales creando:
-
-```
-.githooks/
+```bash
+git commit -m "feat: agrega una funcionalidad"
 ```
 
-Ejemplo
+Resultado:
 
-```
-proyecto/
-│
-├── .githooks/
-│   ├── pre-commit
-│   └── pre-push
+```text
+[AGO] - main - feat: agrega una funcionalidad
 ```
 
-Los hooks globales ejecutarán automáticamente estos scripts si existen.
-
----
-
-# Flujo de trabajo recomendado
-
-```
-Modificar código
-        │
-        ▼
-git add
-        │
-        ▼
-git commit
-        │
-        ▼
-prepare-commit-msg
-        │
-        ▼
-commit-msg
-        │
-        ▼
-pre-commit
-        │
-        ▼
-Repositorio limpio
-        │
-        ▼
-git-release
-        │
-        ▼
-Git Tag
-        │
-        ▼
-git push
-        │
-        ▼
-pre-push
-        │
-        ▼
-GitHub
-```
-
----
-
-# Personalización
-
-Las iniciales utilizadas en los commits pueden cambiarse mediante la variable:
+Las iniciales pueden personalizarse:
 
 ```bash
 export GIT_AUTHOR_INITIALS=ABC
 ```
 
-Resultado
+### `commit-msg`
 
+Valida que los mensajes utilicen Conventional Commits.
+
+Tipos permitidos:
+
+```text
+feat
+fix
+docs
+refactor
+test
+chore
+build
+ci
+perf
+style
+revert
 ```
-[ABC] - develop - feat: nueva funcionalidad
+
+Ejemplos:
+
+```text
+feat: agrega una funcionalidad
+fix: corrige un error
+docs: actualiza documentación
+feat(auth): agrega autenticación
 ```
 
----
+### `pre-commit`
 
-# Licencia
+Valida la sintaxis de los scripts Bash agregados al commit.
 
-MIT License.
+También ejecuta el siguiente archivo cuando existe y tiene permisos de ejecución:
+
+```text
+.githooks/pre-commit
+```
+
+### `pre-push`
+
+Ejecuta el siguiente archivo cuando existe y tiene permisos de ejecución:
+
+```text
+.githooks/pre-push
+```
+
+Si la validación devuelve un error, el push se cancela.
+
+## Releases
+
+El instalador agrega el comando:
+
+```bash
+git-release
+```
+
+Para crear una release:
+
+```bash
+git-release 1.1.0
+```
+
+La versión debe utilizar el formato:
+
+```text
+MAJOR.MINOR.PATCH
+```
+
+El comando:
+
+1. valida que el repositorio esté limpio;
+2. valida la versión actual y la nueva;
+3. actualiza `VERSION`;
+4. agrega una entrada a `CHANGELOG.md`;
+5. crea el commit de release;
+6. crea una etiqueta anotada, por ejemplo `v1.1.0`.
+
+La release se crea localmente. Para publicarla:
+
+```bash
+git push origin main
+git push origin v1.1.0
+```
+
+## Licencia MIT
+
+Durante la instalación, si el repositorio actual no contiene alguno de estos archivos:
+
+```text
+LICENSE
+LICENSE.md
+LICENSE.txt
+```
+
+el instalador pregunta si deseas crear una licencia MIT.
+
+El nombre del titular se obtiene de:
+
+```bash
+git config user.name
+```
+
+## Desinstalación
+
+Quita la configuración global de hooks:
+
+```bash
+git config --global --unset core.hooksPath
+```
+
+Elimina el comando global:
+
+```bash
+rm -f ~/.local/bin/git-release
+```
+
+Después puedes eliminar la carpeta del proyecto.
+
+## Licencia
+
+Este proyecto está disponible bajo la licencia MIT.
