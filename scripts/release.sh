@@ -14,14 +14,23 @@ EOF
 
 NEW_VERSION="$1"
 
-command -v git-project-check >/dev/null 2>&1 || die "git-project-check no está instalado"
+SCRIPT_DIR="$(
+    cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &&
+    pwd
+)"
 
-git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "No estás dentro de un repositorio Git"
+PROJECT_CHECK="$SCRIPT_DIR/project-check.sh"
 
-ROOT="$(git rev-parse --show-toplevel)"
-cd "$ROOT"
+[[ -f "$PROJECT_CHECK" ]] ||
+    die "No se encontró project-check.sh en: $PROJECT_CHECK"
 
-git-project-check
+git rev-parse --is-inside-work-tree >/dev/null 2>&1 ||
+    die "No estás dentro de un repositorio Git"
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+bash "$PROJECT_CHECK"
 
 git diff --quiet || die "Hay cambios sin confirmar."
 
