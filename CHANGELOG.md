@@ -4,6 +4,12 @@ Todos los cambios relevantes de este proyecto se documentarán en este archivo.
 
 El formato está basado en Keep a Changelog y el proyecto utiliza Semantic Versioning.
 
+## [1.1.0] - 2026-07-21
+
+### Changed
+
+- Preparación de la versión 1.1.0.
+
 ## [1.0.0] - 2026-07-21
 
 ### Added
