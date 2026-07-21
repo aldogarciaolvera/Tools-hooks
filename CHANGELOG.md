@@ -1,3 +1,9 @@
+## [1.3.1] - 2026-07-21
+
+### Changed
+
+- Preparación de la versión 1.3.1.
+
 ## [1.3.0] - 2026-07-21
 
 ### Changed
