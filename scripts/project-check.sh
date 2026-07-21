@@ -30,11 +30,34 @@ validate_file() {
     fi
 }
 
+validate_license() {
+    local license_file=""
+
+    for candidate in LICENSE LICENSE.md LICENSE.txt; do
+        if [[ -s "$candidate" ]]; then
+            license_file="$candidate"
+            break
+        fi
+    done
+
+    if [[ -n "$license_file" ]]; then
+        printf 'OK: Archivo de licencia encontrado: %s\n' "$license_file"
+
+        if grep -Fq 'MIT License' "$license_file"; then
+            printf 'OK: Se detectó una licencia MIT.\n'
+        else
+            printf 'AVISO: La licencia no parece ser MIT.\n'
+        fi
+    else
+        printf 'AVISO: El proyecto no contiene un archivo de licencia.\n'
+    fi
+}
+
 printf 'Validando archivos del proyecto...\n\n'
 
 validate_file "VERSION"
 validate_file "CHANGELOG.md"
-validate_file "LICENSE"
+validate_license
 
 if [[ -s VERSION ]]; then
     VERSION_VALUE="$(tr -d '[:space:]' < VERSION)"
@@ -55,14 +78,6 @@ if [[ -s CHANGELOG.md ]]; then
     else
         printf 'ERROR: CHANGELOG.md no contiene "# Changelog".\n' >&2
         FAILED=1
-    fi
-fi
-
-if [[ -s LICENSE ]]; then
-    if grep -Fq 'MIT License' LICENSE; then
-        printf 'OK: Se detectó una licencia MIT.\n'
-    else
-        printf 'AVISO: Existe LICENSE, pero no parece ser MIT.\n'
     fi
 fi
 

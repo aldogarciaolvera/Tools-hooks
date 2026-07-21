@@ -2,13 +2,13 @@
 
 set -Eeuo pipefail
 
-DEV_TOOLS_DIR="$(
+TOOLS_HOOKS_DIR="$(
     cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &&
     pwd
 )"
 
-HOOKS_DIR="$DEV_TOOLS_DIR/git-hooks"
-SCRIPTS_DIR="$DEV_TOOLS_DIR/scripts"
+HOOKS_DIR="$TOOLS_HOOKS_DIR/git-hooks"
+SCRIPTS_DIR="$TOOLS_HOOKS_DIR/scripts"
 LOCAL_BIN="$HOME/.local/bin"
 
 show_help() {
@@ -36,19 +36,19 @@ die() {
 }
 
 parse_arguments() {
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            -h|--help)
-                show_help
-                exit 0
-                ;;
-            *)
-                die "Opción desconocida: $1"
-                ;;
-        esac
+    if [[ $# -eq 0 ]]; then
+        return
+    fi
 
-        shift
-    done
+    case "$1" in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        *)
+            die "Opción desconocida: $1"
+            ;;
+    esac
 }
 
 validate_dependencies() {
@@ -124,6 +124,7 @@ detect_shell_config() {
 }
 
 configure_path() {
+    # shellcheck disable=SC2016
     local path_line='export PATH="$HOME/.local/bin:$PATH"'
     local shell_config
 

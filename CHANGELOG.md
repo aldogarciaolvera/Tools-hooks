@@ -6,9 +6,20 @@ El formato está basado en Keep a Changelog y el proyecto utiliza Semantic Versi
 
 ## [1.1.0] - 2026-07-21
 
+### Added
+
+- Comando global `git-project-init`.
+- Creación de `VERSION` y `CHANGELOG.md` para nuevos repositorios.
+- Creación opcional de licencia MIT.
+- Creación de hooks específicos en `.githooks/`.
+- Comando global `git-project-check`.
+- Validación de archivos esenciales del proyecto.
+- Publicación opcional de rama y etiqueta desde `git-release`.
+
 ### Changed
 
-- Preparación de la versión 1.1.0.
+- El instalador ahora solo configura hooks y comandos globales.
+- La creación de archivos del proyecto se movió a `git-project-init`.
 
 ## [1.0.0] - 2026-07-21
 
