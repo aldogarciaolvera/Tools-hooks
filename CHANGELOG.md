@@ -1,3 +1,9 @@
+## [1.3.2] - 2026-07-22
+
+### Changed
+
+- Preparación de la versión 1.3.2.
+
 ## 1.3.2
 
 ### Changed
