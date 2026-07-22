@@ -1,3 +1,10 @@
+## 1.3.2
+
+### Changed
+
+- Replaced the `chore` commit type with `mnto` to use Spanish terminology consistently across the project.
+- Updated commit validation hooks and documentation accordingly.
+
 ## [1.3.1] - 2026-07-21
 
 ### Changed

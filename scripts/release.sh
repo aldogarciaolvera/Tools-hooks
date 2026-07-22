@@ -73,7 +73,7 @@ trap cleanup EXIT
 mv -- "$CHANGELOG_TMP" CHANGELOG.md
 
 git add VERSION CHANGELOG.md
-git commit -m "chore: release $NEW_VERSION"
+git commit -m "mnto: release $NEW_VERSION"
 
 TAG="v$NEW_VERSION"
 git tag -a "$TAG" -m "Release $TAG"

@@ -417,7 +417,7 @@ Si la validación falla, Git cancela el push.
 | `docs` | Modifica documentación. | `docs: actualiza instalación` |
 | `refactor` | Reestructura sin cambiar comportamiento. | `refactor: simplifica configuración` |
 | `test` | Agrega o modifica pruebas. | `test: agrega pruebas de release` |
-| `chore` | Tareas generales de mantenimiento. | `chore: actualiza dependencias` |
+| `mnto` | Tareas generales de mantenimiento. | `mnto: actualiza dependencias` |
 | `build` | Cambios de compilación o empaquetado. | `build: actualiza Dockerfile` |
 | `ci` | Cambios de integración continua. | `ci: agrega GitHub Actions` |
 | `perf` | Mejoras de rendimiento. | `perf: optimiza compresión` |
