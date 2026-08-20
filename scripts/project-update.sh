@@ -1,10 +1,10 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 set -Eeuo pipefail
 
 die(){ printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 ||
-    die "No estás dentro de un repositorio Git"
+    die "No estas dentro de un repositorio Git"
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
@@ -15,24 +15,24 @@ printf 'Actualizando el proyecto %s...\n\n' "$project_name"
 
 if [[ ! -e DESIGN.md ]]; then
     cat > DESIGN.md <<'EOF'
-# Diseño del Proyecto
+# Diseno del Proyecto
 
-<!-- Agrega aquí la documentación sobre la arquitectura, diseño y decisiones técnicas del proyecto -->
+<!-- Agrega aqui la documentacion sobre la arquitectura, diseno y decisiones tecnicas del proyecto -->
 EOF
     printf 'Creado: DESIGN.md\n'
 else
-    printf 'DESIGN.md ya existe. No se modificará.\n'
+    printf 'DESIGN.md ya existe. No se modificara.\n'
 fi
 
 if [[ ! -e AGENTS.md ]]; then
     cat > AGENTS.md <<'EOF'
-# Agentes y Automatización
+# Agentes y Automatizacion
 
-<!-- Agrega aquí la configuración, roles o instrucciones para los agentes (por ejemplo, IA, flujos de trabajo) -->
+<!-- Agrega aqui la configuracion, roles o instrucciones para los agentes (por ejemplo, IA, flujos de trabajo) -->
 EOF
     printf 'Creado: AGENTS.md\n'
 else
-    printf 'AGENTS.md ya existe. No se modificará.\n'
+    printf 'AGENTS.md ya existe. No se modificara.\n'
 fi
 
 if [[ ! -e .editorconfig ]]; then
@@ -49,7 +49,7 @@ trim_trailing_whitespace = true
 EOF
     printf 'Creado: .editorconfig\n'
 else
-    printf '.editorconfig ya existe. No se modificará.\n'
+    printf '.editorconfig ya existe. No se modificara.\n'
 fi
 
 if [[ ! -e .prettierrc ]]; then
@@ -64,19 +64,19 @@ if [[ ! -e .prettierrc ]]; then
 EOF
     printf 'Creado: .prettierrc\n'
 else
-    printf '.prettierrc ya existe. No se modificará.\n'
+    printf '.prettierrc ya existe. No se modificara.\n'
 fi
 
 if [[ ! -e README.md ]]; then
     cat > README.md <<EOF
 # $project_name
 
-<!-- Agrega una breve descripción de tu proyecto aquí -->
+<!-- Agrega una breve descripcion de tu proyecto aqui -->
 
-## Instalación
+## Instalacion
 
 \`\`\`bash
-# Instrucciones de instalación
+# Instrucciones de instalacion
 \`\`\`
 
 ## Uso
@@ -87,7 +87,7 @@ if [[ ! -e README.md ]]; then
 EOF
     printf 'Creado: README.md\n'
 else
-    printf 'README.md ya existe. No se modificará.\n'
+    printf 'README.md ya existe. No se modificara.\n'
 fi
 
-printf '\n¡Actualización completada!\n'
+printf '\nActualizacion completada!\n'

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 
 set -Eeuo pipefail
 
@@ -44,7 +44,7 @@ validate_license() {
         printf 'OK: Archivo de licencia encontrado: %s\n' "$license_file"
 
         if grep -Fq 'MIT License' "$license_file"; then
-            printf 'OK: Se detectó una licencia MIT.\n'
+            printf 'OK: Se detecto una licencia MIT.\n'
         else
             printf 'AVISO: La licencia no parece ser MIT.\n'
         fi
@@ -65,7 +65,7 @@ if [[ -s VERSION ]]; then
     VERSION_VALUE="$(tr -d '[:space:]' < VERSION)"
 
     if is_semver "$VERSION_VALUE"; then
-        printf 'OK: VERSION contiene una versión válida: %s\n' \
+        printf 'OK: VERSION contiene una version valida: %s\n' \
             "$VERSION_VALUE"
     else
         printf 'ERROR: VERSION no utiliza el formato X.Y.Z: %s\n' \
@@ -76,7 +76,7 @@ fi
 
 if [[ -s CHANGELOG.md ]]; then
     if grep -Fq '# Changelog' CHANGELOG.md; then
-        printf 'OK: CHANGELOG.md tiene un encabezado válido.\n'
+        printf 'OK: CHANGELOG.md tiene un encabezado valido.\n'
     else
         printf 'ERROR: CHANGELOG.md no contiene "# Changelog".\n' >&2
         FAILED=1
@@ -86,8 +86,8 @@ fi
 printf '\n'
 
 if [[ "$FAILED" -ne 0 ]]; then
-    printf 'La validación del proyecto falló.\n' >&2
+    printf 'La validacion del proyecto fallo.\n' >&2
     exit 1
 fi
 
-printf 'Validación completada correctamente.\n'
+printf 'Validacion completada correctamente.\n'

@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [switch]$Help
 )
@@ -65,7 +65,7 @@ Write-Step "Validando requisitos"
 
 $GitCommand = Get-Command git.exe -ErrorAction SilentlyContinue
 if (-not $GitCommand) {
-    Fail "No se encontró Git. Instala Git for Windows y vuelve a ejecutar el instalador."
+    Fail "No se encontro Git. Instala Git for Windows y vuelve a ejecutar el instalador."
 }
 
 $GitExe = $GitCommand.Source
@@ -79,7 +79,7 @@ if (-not (Test-Path -LiteralPath $BashExe -PathType Leaf)) {
         $BashExe = $BashCommand.Source
     }
     else {
-        Fail "No se encontró Git Bash. Reinstala Git for Windows incluyendo Git Bash."
+        Fail "No se encontro Git Bash. Reinstala Git for Windows incluyendo Git Bash."
     }
 }
 
@@ -89,7 +89,7 @@ if (-not (Test-Path -LiteralPath $HooksDir -PathType Container)) {
 
 foreach ($Entry in $Commands.GetEnumerator()) {
     if (-not (Test-Path -LiteralPath $Entry.Value -PathType Leaf)) {
-        Fail "No se encontró el script requerido: $($Entry.Value)"
+        Fail "No se encontro el script requerido: $($Entry.Value)"
     }
 }
 
@@ -163,7 +163,7 @@ if (-not $BinAlreadyPresent) {
     }
 
     [Environment]::SetEnvironmentVariable("Path", $NewUserPath, "User")
-    Write-Ok "Se agregó $BinDir al PATH del usuario."
+    Write-Ok "Se agrego $BinDir al PATH del usuario."
 }
 else {
     Write-Ok "$BinDir ya estaba en el PATH del usuario."
@@ -173,33 +173,33 @@ if (($env:Path.Split(';') | ForEach-Object { $_.TrimEnd('\') }) -inotcontains $B
     $env:Path = "$env:Path;$BinDir"
 }
 
-Write-Step "Verificando instalación"
+Write-Step "Verificando instalacion"
 
 $ConfiguredHooks = & $GitExe config --global --get core.hooksPath
 if ($LASTEXITCODE -ne 0 -or $ConfiguredHooks -ne $HooksGitPath) {
-    Fail "La verificación de core.hooksPath falló."
+    Fail "La verificacion de core.hooksPath fallo."
 }
 
 $ConfiguredRoot = & $GitExe config --global --get tools-hooks.root
 
 if ($LASTEXITCODE -ne 0 -or $ConfiguredRoot -ne $RepoGitPath) {
-    Fail "La verificación de tools-hooks.root falló."
+    Fail "La verificacion de tools-hooks.root fallo."
 }
 
 foreach ($CommandName in $Commands.Keys) {
     $WrapperPath = Join-Path $BinDir "$CommandName.cmd"
 
     if (-not (Test-Path -LiteralPath $WrapperPath -PathType Leaf)) {
-        Fail "No se instaló correctamente $CommandName."
+        Fail "No se instalo correctamente $CommandName."
     }
 }
 
 Write-Host ""
-Write-Host "Tools-hooks se instaló correctamente." -ForegroundColor Green
+Write-Host "Tools-hooks se instalo correctamente." -ForegroundColor Green
 Write-Host ""
 Write-Host "Cierra y abre PowerShell, Windows Terminal o CMD para recargar el PATH."
 Write-Host ""
-Write-Host "Prueba después:"
+Write-Host "Prueba despues:"
 Write-Host "  git-project-check"
 Write-Host "  git-project-init --help"
 Write-Host "  git-project-update"

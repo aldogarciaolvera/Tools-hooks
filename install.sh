@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 
 set -Eeuo pipefail
 
@@ -19,7 +19,7 @@ Uso:
 Opciones:
   -h, --help    Muestra esta ayuda.
 
-El instalador realiza únicamente estas acciones:
+El instalador realiza unicamente estas acciones:
 
 - Instala los hooks globales de Git.
 - Configura ~/.local/bin en PATH cuando sea necesario.
@@ -47,17 +47,17 @@ parse_arguments() {
             exit 0
             ;;
         *)
-            die "Opción desconocida: $1"
+            die "Opcion desconocida: $1"
             ;;
     esac
 }
 
 validate_dependencies() {
     command -v git >/dev/null 2>&1 ||
-        die "Git no está instalado o no está disponible en PATH"
+        die "Git no esta instalado o no esta disponible en PATH"
 
     command -v bash >/dev/null 2>&1 ||
-        die "Bash no está instalado o no está disponible en PATH"
+        die "Bash no esta instalado o no esta disponible en PATH"
 }
 
 validate_files() {
@@ -137,12 +137,12 @@ configure_path() {
     touch "$shell_config"
 
     if [[ ":$PATH:" == *":$LOCAL_BIN:"* ]]; then
-        printf '%s ya está incluido en PATH.\n' "$LOCAL_BIN"
+        printf '%s ya esta incluido en PATH.\n' "$LOCAL_BIN"
         return 0
     fi
 
     if grep -Fqx "$path_line" "$shell_config" 2>/dev/null; then
-        printf '%s ya está configurado en %s.\n' \
+        printf '%s ya esta configurado en %s.\n' \
             "$LOCAL_BIN" \
             "$shell_config"
     else
@@ -199,7 +199,7 @@ verify_installation() {
     local failed=0
     local command_name
 
-    printf '\nVerificando instalación...\n'
+    printf '\nVerificando instalacion...\n'
 
     for command_name in \
         git-project-init \
@@ -226,7 +226,7 @@ verify_installation() {
     if [[ "$hooks_path" == "$HOOKS_DIR" ]]; then
         printf 'OK: core.hooksPath=%s\n' "$hooks_path"
     else
-        printf 'ERROR: core.hooksPath no está configurado correctamente.\n' >&2
+        printf 'ERROR: core.hooksPath no esta configurado correctamente.\n' >&2
         failed=1
     fi
 
@@ -238,12 +238,12 @@ verify_installation() {
     if [[ "$configured_root" == "$TOOLS_HOOKS_DIR" ]]; then
         printf 'OK: tools-hooks.root=%s\n' "$configured_root"
     else
-        printf 'ERROR: tools-hooks.root no está configurado correctamente.\n' >&2
+        printf 'ERROR: tools-hooks.root no esta configurado correctamente.\n' >&2
         failed=1
     fi 
     
     [[ "$failed" -eq 0 ]] ||
-        die "La instalación no pudo verificarse correctamente"
+        die "La instalacion no pudo verificarse correctamente"
 }
 
 print_summary() {
@@ -252,9 +252,9 @@ print_summary() {
     shell_config="$(detect_shell_config)"
 
     printf '\n'
-    printf 'Instalación completada correctamente.\n'
+    printf 'Instalacion completada correctamente.\n'
 
-    printf '\nConfiguración global:\n'
+    printf '\nConfiguracion global:\n'
     printf '  Hooks:   %s\n' \
         "$(git config --global --get core.hooksPath)"
     printf '  Binarios: %s\n' "$LOCAL_BIN"
@@ -269,7 +269,7 @@ print_summary() {
         printf '\nPara actualizar la terminal actual ejecuta:\n'
         printf '  source %s\n' "$shell_config"
     else
-        printf '\nLos comandos ya están disponibles en esta terminal.\n'
+        printf '\nLos comandos ya estan disponibles en esta terminal.\n'
     fi
 }
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 set -Eeuo pipefail
 
 die(){ printf 'ERROR: %s\n' "$*" >&2; exit 1; }
@@ -17,16 +17,16 @@ NEW_VERSION="$1"
 TOOLS_HOOKS_ROOT="$(git config --global --get tools-hooks.root || true)"
 
 if [[ -z "$TOOLS_HOOKS_ROOT" ]]; then
-    die "tools-hooks.root no está configurado. Ejecuta ./install.sh"
+    die "tools-hooks.root no esta configurado. Ejecuta ./install.sh"
 fi
 
 PROJECT_CHECK="$TOOLS_HOOKS_ROOT/scripts/project-check.sh"
 
 [[ -f "$PROJECT_CHECK" ]] ||
-    die "No se encontró project-check.sh en: $PROJECT_CHECK"
+    die "No se encontro project-check.sh en: $PROJECT_CHECK"
 
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 ||
-    die "No estás dentro de un repositorio Git"
+    die "No estas dentro de un repositorio Git"
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
@@ -41,7 +41,7 @@ is_semver() {
 }
 
 is_semver "$NEW_VERSION" ||
-    die "La versión debe usar el formato X.Y.Z, por ejemplo 1.2.0"
+    die "La version debe usar el formato X.Y.Z, por ejemplo 1.2.0"
 TAG="v$NEW_VERSION"
 
 git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null &&
@@ -49,7 +49,7 @@ git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null &&
 CURRENT_BRANCH="$(git branch --show-current)"
 CURRENT_VERSION="$(tr -d '[:space:]' < VERSION)"
 
-[[ "$CURRENT_VERSION" != "$NEW_VERSION" ]] || die "La versión ya es $NEW_VERSION"
+[[ "$CURRENT_VERSION" != "$NEW_VERSION" ]] || die "La version ya es $NEW_VERSION"
 
 printf '%s\n' "$NEW_VERSION" > VERSION
 
@@ -105,7 +105,7 @@ write_section() {
     
     if [[ -z "$FEATURES" && -z "$FIXES" && -z "$PERF" && -z "$REFACTOR" && -z "$DOCS" ]]; then
         printf '### Changed\n\n'
-        printf -- '- Preparación de la versión %s.\n\n' "$NEW_VERSION"
+        printf -- '- Preparacion de la version %s.\n\n' "$NEW_VERSION"
     fi
     
     cat CHANGELOG.md
@@ -122,7 +122,7 @@ git tag -a "$TAG" -m "Release $TAG"
 REMOTE="$(git config "branch.${CURRENT_BRANCH}.remote" || echo "origin")"
 
 echo
-read -r -p "¿Publicar rama y etiqueta en $REMOTE? [Y/n]: " ans
+read -r -p "Publicar rama y etiqueta en $REMOTE? [Y/n]: " ans
 case "${ans:-Y}" in
     n|N|no|NO)
         printf '\n'
@@ -131,7 +131,7 @@ printf 'Commit:\n'
 printf '  %s\n\n' "$(git rev-parse --short HEAD)"
 printf 'Tag:\n'
 printf '  %s\n\n' "$TAG"
-printf 'Para publicarla más tarde ejecuta:\n\n'
+printf 'Para publicarla mas tarde ejecuta:\n\n'
 printf '  git push %s %s\n' "$REMOTE" "$CURRENT_BRANCH"
 printf '  git push %s %s\n' "$REMOTE" "$TAG"
         ;;

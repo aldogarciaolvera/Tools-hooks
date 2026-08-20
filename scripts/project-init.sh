@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 
 set -Eeuo pipefail
 
@@ -10,13 +10,13 @@ die() {
 TOOLS_HOOKS_ROOT="$(git config --global --get tools-hooks.root || true)"
 
 if [[ -z "$TOOLS_HOOKS_ROOT" ]]; then
-    die "tools-hooks.root no está configurado. Ejecuta ./install.sh"
+    die "tools-hooks.root no esta configurado. Ejecuta ./install.sh"
 fi
 
 PROJECT_CHECK="$TOOLS_HOOKS_ROOT/scripts/project-check.sh"
 
 [[ -f "$PROJECT_CHECK" ]] ||
-    die "No se encontró project-check.sh en: $PROJECT_CHECK"
+    die "No se encontro project-check.sh en: $PROJECT_CHECK"
 
 INITIAL_VERSION="0.0.1"
 LICENSE_MODE="ask"
@@ -28,10 +28,10 @@ Uso:
   git-project-init [opciones]
 
 Opciones:
-  -v, --version X.Y.Z   Versión inicial. Por defecto: 0.0.1
+  -v, --version X.Y.Z   Version inicial. Por defecto: 0.0.1
   --license             Crea la licencia MIT sin preguntar.
   --no-license          No crea ninguna licencia.
-  -t, --template TIPO   Instala una plantilla básica (react, astro, angular, reactnative, dotnet, python).
+  -t, --template TIPO   Instala una plantilla basica (react, astro, angular, reactnative, dotnet, python).
   -h, --help            Muestra esta ayuda.
 
 Ejemplos:
@@ -48,7 +48,7 @@ is_semver() {
 
 create_version() {
     if [[ -e VERSION ]]; then
-        printf 'VERSION ya existe. No se modificará.\n'
+        printf 'VERSION ya existe. No se modificara.\n'
         return
     fi
 
@@ -58,7 +58,7 @@ create_version() {
 
 create_changelog() {
     if [[ -e CHANGELOG.md ]]; then
-        printf 'CHANGELOG.md ya existe. No se modificará.\n'
+        printf 'CHANGELOG.md ya existe. No se modificara.\n'
         return
     fi
 
@@ -68,15 +68,15 @@ create_changelog() {
     cat > CHANGELOG.md <<EOF
 # Changelog
 
-Todos los cambios relevantes de este proyecto se documentarán en este archivo.
+Todos los cambios relevantes de este proyecto se documentaran en este archivo.
 
-El formato está basado en Keep a Changelog y el proyecto utiliza Semantic Versioning.
+El formato esta basado en Keep a Changelog y el proyecto utiliza Semantic Versioning.
 
 ## [$INITIAL_VERSION] - $current_date
 
 ### Added
 
-- Inicialización del proyecto.
+- Inicializacion del proyecto.
 EOF
 
     printf 'Creado: CHANGELOG.md\n'
@@ -84,23 +84,23 @@ EOF
 
 create_docs_files() {
     if [[ -e DESIGN.md ]]; then
-        printf 'DESIGN.md ya existe. No se modificará.\n'
+        printf 'DESIGN.md ya existe. No se modificara.\n'
     else
         cat > DESIGN.md <<'EOF'
-# Diseño del Proyecto
+# Diseno del Proyecto
 
-<!-- Agrega aquí la documentación sobre la arquitectura, diseño y decisiones técnicas del proyecto -->
+<!-- Agrega aqui la documentacion sobre la arquitectura, diseno y decisiones tecnicas del proyecto -->
 EOF
         printf 'Creado: DESIGN.md\n'
     fi
 
     if [[ -e AGENTS.md ]]; then
-        printf 'AGENTS.md ya existe. No se modificará.\n'
+        printf 'AGENTS.md ya existe. No se modificara.\n'
     else
         cat > AGENTS.md <<'EOF'
-# Agentes y Automatización
+# Agentes y Automatizacion
 
-<!-- Agrega aquí la configuración, roles o instrucciones para los agentes (por ejemplo, IA, flujos de trabajo) -->
+<!-- Agrega aqui la configuracion, roles o instrucciones para los agentes (por ejemplo, IA, flujos de trabajo) -->
 EOF
         printf 'Creado: AGENTS.md\n'
     fi
@@ -114,12 +114,12 @@ create_base_config_files() {
         cat > README.md <<EOF
 # $project_name
 
-<!-- Agrega una breve descripción de tu proyecto aquí -->
+<!-- Agrega una breve descripcion de tu proyecto aqui -->
 
-## Instalación
+## Instalacion
 
 \`\`\`bash
-# Instrucciones de instalación
+# Instrucciones de instalacion
 \`\`\`
 
 ## Uso
@@ -130,7 +130,7 @@ create_base_config_files() {
 EOF
         printf 'Creado: README.md\n'
     else
-        printf 'README.md ya existe. No se modificará.\n'
+        printf 'README.md ya existe. No se modificara.\n'
     fi
 
     if [[ ! -e .editorconfig ]]; then
@@ -147,7 +147,7 @@ trim_trailing_whitespace = true
 EOF
         printf 'Creado: .editorconfig\n'
     else
-        printf '.editorconfig ya existe. No se modificará.\n'
+        printf '.editorconfig ya existe. No se modificara.\n'
     fi
 
     if [[ ! -e .prettierrc ]]; then
@@ -162,7 +162,7 @@ EOF
 EOF
         printf 'Creado: .prettierrc\n'
     else
-        printf '.prettierrc ya existe. No se modificará.\n'
+        printf '.prettierrc ya existe. No se modificara.\n'
     fi
 }
 
@@ -190,14 +190,14 @@ setup_gitignore() {
             curl -sL "https://www.toptal.com/developers/gitignore/api/$ignore_type" > .gitignore
             printf 'Creado: .gitignore (basado en %s)\n' "$ignore_type"
         else
-            # Solo añadir un salto de línea y adjuntar lo descargado para complementar
+            # Solo anadir un salto de linea y adjuntar lo descargado para complementar
             echo "" >> .gitignore
-            echo "# --- Adiciones automáticas de git-project-init ($ignore_type) ---" >> .gitignore
+            echo "# --- Adiciones automaticas de git-project-init ($ignore_type) ---" >> .gitignore
             curl -sL "https://www.toptal.com/developers/gitignore/api/$ignore_type" >> .gitignore
             printf 'Actualizado: .gitignore (complementado con %s)\n' "$ignore_type"
         fi
     else
-        printf 'AVISO: curl no está instalado, no se pudo descargar .gitignore avanzado.\n'
+        printf 'AVISO: curl no esta instalado, no se pudo descargar .gitignore avanzado.\n'
     fi
 }
 
@@ -254,7 +254,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
 EXPOSE 8080
-# Asegúrate de que el nombre del DLL coincida con el nombre de tu proyecto
+# Asegurate de que el nombre del DLL coincida con el nombre de tu proyecto
 ENTRYPOINT ["dotnet", "${project_name}.dll"]
 EOF
                 ;;
@@ -275,7 +275,7 @@ EOF
             printf 'Creado: Dockerfile\n'
         fi
     else
-        printf 'Dockerfile ya existe. No se modificará.\n'
+        printf 'Dockerfile ya existe. No se modificara.\n'
     fi
 }
 
@@ -343,10 +343,10 @@ handle_license() {
             ;;
         ask)
             printf '\n'
-            read -r -p '¿Deseas agregar la licencia MIT? [y/N]: ' answer
+            read -r -p 'Deseas agregar la licencia MIT? [y/N]: ' answer
 
             case "$answer" in
-                y|Y|yes|YES|si|SI|sí|SÍ)
+                y|Y|yes|YES|si|SI|si|SI)
                     create_mit_license
                     ;;
                 *)
@@ -371,7 +371,7 @@ EOF
         chmod +x .githooks/pre-commit
         printf 'Creado: .githooks/pre-commit\n'
     else
-        printf '.githooks/pre-commit ya existe. No se modificará.\n'
+        printf '.githooks/pre-commit ya existe. No se modificara.\n'
     fi
 
     if [[ ! -e .githooks/pre-push ]]; then
@@ -385,7 +385,7 @@ EOF
         chmod +x .githooks/pre-push
         printf 'Creado: .githooks/pre-push\n'
     else
-        printf '.githooks/pre-push ya existe. No se modificará.\n'
+        printf '.githooks/pre-push ya existe. No se modificara.\n'
     fi
 }
 
@@ -401,7 +401,7 @@ install_template() {
     case "$template" in
         react)
             if ! command -v pnpm >/dev/null 2>&1; then
-                printf 'AVISO: pnpm no está instalado. Instálalo para usar esta plantilla.\n'
+                printf 'AVISO: pnpm no esta instalado. Instalalo para usar esta plantilla.\n'
                 return
             fi
             pnpm create vite@latest temp-app --template react
@@ -411,7 +411,7 @@ install_template() {
             ;;
         astro)
             if ! command -v pnpm >/dev/null 2>&1; then
-                printf 'AVISO: pnpm no está instalado.\n'
+                printf 'AVISO: pnpm no esta instalado.\n'
                 return
             fi
             pnpm create astro@latest temp-app --template minimal --install no --git no --yes
@@ -421,7 +421,7 @@ install_template() {
             ;;
         angular)
             if ! command -v pnpm >/dev/null 2>&1; then
-                printf 'AVISO: pnpm no está instalado.\n'
+                printf 'AVISO: pnpm no esta instalado.\n'
                 return
             fi
             npx -y @angular/cli@latest new temp-app --package-manager pnpm --skip-git --skip-install --defaults
@@ -431,7 +431,7 @@ install_template() {
             ;;
         reactnative)
             if ! command -v pnpm >/dev/null 2>&1; then
-                printf 'AVISO: pnpm no está instalado.\n'
+                printf 'AVISO: pnpm no esta instalado.\n'
                 return
             fi
             pnpm create expo-app temp-app --template blank
@@ -441,7 +441,7 @@ install_template() {
             ;;
         dotnet|.net)
             if ! command -v dotnet >/dev/null 2>&1; then
-                printf 'AVISO: dotnet no está instalado.\n'
+                printf 'AVISO: dotnet no esta instalado.\n'
                 return
             fi
             dotnet new webapi
@@ -452,7 +452,7 @@ install_template() {
             elif command -v python >/dev/null 2>&1; then
                 python -m venv venv
             else
-                printf 'AVISO: python no está instalado.\n'
+                printf 'AVISO: python no esta instalado.\n'
                 return
             fi
             
@@ -480,7 +480,7 @@ EOF
             fi
             ;;
         *)
-            die "Plantilla desconocida: $template. Opciones válidas: react, astro, angular, reactnative, dotnet, python."
+            die "Plantilla desconocida: $template. Opciones validas: react, astro, angular, reactnative, dotnet, python."
             ;;
     esac
     printf 'Plantilla instalada correctamente.\n'
@@ -491,7 +491,7 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         -v|--version)
             [[ $# -ge 2 ]] ||
-                die "Debes indicar una versión después de $1"
+                die "Debes indicar una version despues de $1"
 
             INITIAL_VERSION="$2"
             shift 2
@@ -506,7 +506,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         -t|--template)
             [[ $# -ge 2 ]] ||
-                die "Debes indicar una tecnología después de $1"
+                die "Debes indicar una tecnologia despues de $1"
             TEMPLATE_NAME="$2"
             shift 2
             ;;
@@ -515,13 +515,13 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         *)
-            die "Opción desconocida: $1"
+            die "Opcion desconocida: $1"
             ;;
     esac
 done
 
 is_semver "$INITIAL_VERSION" ||
-    die "La versión debe tener el formato X.Y.Z"
+    die "La version debe tener el formato X.Y.Z"
 
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 ||
     die "Debes ejecutar este comando dentro de un repositorio Git"
@@ -548,14 +548,14 @@ printf 'Ejecutando autoskills...\n'
 if command -v npx >/dev/null 2>&1; then
     npx autoskills@latest
 else
-    printf 'AVISO: npx no está instalado. Se omitirá autoskills.\n'
+    printf 'AVISO: npx no esta instalado. Se omitira autoskills.\n'
 fi
 
 printf '\n'
 printf 'Validando resultado...\n\n'
 
 [[ -f "$PROJECT_CHECK" ]] ||
-    die "No se encontró project-check.sh en: $PROJECT_CHECK"
+    die "No se encontro project-check.sh en: $PROJECT_CHECK"
 
 bash "$PROJECT_CHECK"
 
