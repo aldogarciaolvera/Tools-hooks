@@ -277,18 +277,6 @@ EOF
     else
         printf 'Dockerfile ya existe. No se modificará.\n'
     fi
-
-    if [[ ! -e docker-compose.yml && -s Dockerfile ]]; then
-        cat > docker-compose.yml <<EOF
-version: '3.8'
-services:
-  app:
-    build: .
-    ports:
-      - "8080:80" # Ajusta los puertos según corresponda
-EOF
-        printf 'Creado: docker-compose.yml\n'
-    fi
 }
 
 create_mit_license() {

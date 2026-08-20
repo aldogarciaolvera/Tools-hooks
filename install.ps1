@@ -123,6 +123,7 @@ foreach ($Entry in $Commands.GetEnumerator()) {
     $CommandName = $Entry.Key
     $ScriptPath = $Entry.Value.Replace('\', '/')
     $WrapperPath = Join-Path $BinDir "$CommandName.cmd"
+    $BashWrapperPath = Join-Path $BinDir "$CommandName"
 
     $Wrapper = @"
 @echo off
@@ -130,8 +131,14 @@ foreach ($Entry in $Commands.GetEnumerator()) {
 exit /b %ERRORLEVEL%
 "@
 
+    $BashWrapper = @"
+#!/bin/sh
+bash "$ScriptPath" "`$@"
+"@
+
     Set-Content -LiteralPath $WrapperPath -Value $Wrapper -Encoding ASCII
-    Write-Ok "$CommandName -> $WrapperPath"
+    Set-Content -LiteralPath $BashWrapperPath -Value $BashWrapper -Encoding ASCII
+    Write-Ok "$CommandName -> $WrapperPath (y Bash wrapper)"
 }
 
 Write-Step "Configurando PATH"

@@ -202,7 +202,7 @@ README.md (si no existe)
 .editorconfig
 .prettierrc
 .gitignore (basado en la plantilla)
-Dockerfile (y docker-compose.yml si usas una plantilla)
+Dockerfile (si usas una plantilla)
 .githooks/pre-commit
 .githooks/pre-push
 ```
@@ -287,7 +287,7 @@ git-project-init --template react
 ```
 
 Tecnologías soportadas: `react` (Vite), `astro`, `angular`, `reactnative` (Expo), `dotnet` (Web API) y `python` (FastAPI). Para frameworks de JS/TS, se utiliza `pnpm` de forma predeterminada.
-Al especificar una plantilla, se genera también un `Dockerfile` base (y `docker-compose.yml`) optimizado para esa tecnología.
+Al especificar una plantilla, se genera también un `Dockerfile` base optimizado para esa tecnología.
 
 Mostrar ayuda:
 
