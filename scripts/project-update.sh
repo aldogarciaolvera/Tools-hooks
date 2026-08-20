@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -Eeuo pipefail
 
 die(){ printf 'ERROR: %s\n' "$*" >&2; exit 1; }
@@ -33,6 +33,17 @@ EOF
     printf 'Creado: AGENTS.md\n'
 else
     printf 'AGENTS.md ya existe. No se modificara.\n'
+fi
+
+if [[ ! -e ARCHITECTURE.md ]]; then
+    cat > ARCHITECTURE.md <<'EOF'
+# Arquitectura del Proyecto
+
+<!-- Agrega aqui la documentacion sobre la arquitectura, patron de diseno, o clean architecture utilizada. -->
+EOF
+    printf 'Creado: ARCHITECTURE.md\n'
+else
+    printf 'ARCHITECTURE.md ya existe. No se modificara.\n'
 fi
 
 if [[ ! -e .editorconfig ]]; then
