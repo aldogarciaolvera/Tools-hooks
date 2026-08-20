@@ -1,3 +1,9 @@
+## [1.4.1] - 2026-08-20
+
+### Features
+
+- feat: abreviatura
+
 ## [1.4.0] - 2026-08-20
 
 ### Features
