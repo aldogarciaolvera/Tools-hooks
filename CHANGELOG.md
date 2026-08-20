@@ -1,3 +1,10 @@
+## [1.4.3] - 2026-08-20
+
+### Features
+
+- feat: Actualizacion
+- feat: Arquitectura
+
 ## [1.4.2] - 2026-08-20
 
 ### Bug Fixes
