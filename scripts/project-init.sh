@@ -29,15 +29,15 @@ Uso:
   git-project-init [opciones]
 
 Opciones:
-  --version X.Y.Z   Versión inicial. Por defecto: 0.1.0
+  --version X.Y.Z   Versión inicial. Por defecto: 0.0.1
   --license         Crea la licencia MIT sin preguntar.
   --no-license      No crea ninguna licencia.
   -h, --help        Muestra esta ayuda.
 
 Ejemplos:
   git-project-init
-  git-project-init --version 1.0.0
-  git-project-init --version 1.0.0 --license
+  git-project-init --version 0.0.1  
+  git-project-init --version 0.0.1 --license
 EOF
 }
 
@@ -167,21 +167,7 @@ create_repository_validations() {
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-TOOLS_HOOKS_ROOT="$(git config --global --get tools-hooks.root || true)"
-
-if [[ -z "$TOOLS_HOOKS_ROOT" ]]; then
-    printf 'ERROR: Tools-hooks no está instalado o tools-hooks.root no está configurado.\n' >&2
-    exit 1
-fi
-
-PROJECT_CHECK="$TOOLS_HOOKS_ROOT/scripts/project-check.sh"
-
-if [[ ! -f "$PROJECT_CHECK" ]]; then
-    printf 'ERROR: No se encontró project-check.sh en: %s\n' "$PROJECT_CHECK" >&2
-    exit 1
-fi
-
-bash "$PROJECT_CHECK"
+git-project-check
 EOF
 
         chmod +x .githooks/pre-commit
@@ -195,21 +181,7 @@ EOF
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-TOOLS_HOOKS_ROOT="$(git config --global --get tools-hooks.root || true)"
-
-if [[ -z "$TOOLS_HOOKS_ROOT" ]]; then
-    printf 'ERROR: Tools-hooks no está instalado o tools-hooks.root no está configurado.\n' >&2
-    exit 1
-fi
-
-PROJECT_CHECK="$TOOLS_HOOKS_ROOT/scripts/project-check.sh"
-
-if [[ ! -f "$PROJECT_CHECK" ]]; then
-    printf 'ERROR: No se encontró project-check.sh en: %s\n' "$PROJECT_CHECK" >&2
-    exit 1
-fi
-
-bash "$PROJECT_CHECK"
+git-project-check
 EOF
 
         chmod +x .githooks/pre-push
@@ -264,6 +236,14 @@ handle_license
 create_repository_validations
 
 printf '\n'
+printf 'Ejecutando autoskills...\n'
+if command -v npx >/dev/null 2>&1; then
+    npx autoskills@latest
+else
+    printf 'AVISO: npx no está instalado. Se omitirá autoskills.\n'
+fi
+
+printf '\n'
 printf 'Validando resultado...\n\n'
 
 [[ -f "$PROJECT_CHECK" ]] ||
@@ -272,3 +252,4 @@ printf 'Validando resultado...\n\n'
 bash "$PROJECT_CHECK"
 
 printf '\nProyecto inicializado correctamente.\n'
+

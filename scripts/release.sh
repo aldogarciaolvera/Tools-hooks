@@ -55,7 +55,7 @@ printf '%s\n' "$NEW_VERSION" > VERSION
 
 DATE="$(date +%F)"
 
-CHANGELOG_TMP="${REPO_ROOT}/.CHANGELOG.md.tools-hooks.$$"
+CHANGELOG_TMP="$(mktemp "${REPO_ROOT}/.CHANGELOG.md.XXXXXX")"
 
 cleanup() {
     rm -f -- "$CHANGELOG_TMP"
@@ -78,8 +78,10 @@ git commit -m "mnto: release $NEW_VERSION"
 TAG="v$NEW_VERSION"
 git tag -a "$TAG" -m "Release $TAG"
 
+REMOTE="$(git config "branch.${CURRENT_BRANCH}.remote" || echo "origin")"
+
 echo
-read -r -p "¿Publicar rama y etiqueta en origin? [Y/n]: " ans
+read -r -p "¿Publicar rama y etiqueta en $REMOTE? [Y/n]: " ans
 case "${ans:-Y}" in
     n|N|no|NO)
         printf '\n'
@@ -89,12 +91,12 @@ printf '  %s\n\n' "$(git rev-parse --short HEAD)"
 printf 'Tag:\n'
 printf '  %s\n\n' "$TAG"
 printf 'Para publicarla más tarde ejecuta:\n\n'
-printf '  git push origin %s\n' "$(git branch --show-current)"
-printf '  git push origin %s\n' "$TAG"
+printf '  git push %s %s\n' "$REMOTE" "$CURRENT_BRANCH"
+printf '  git push %s %s\n' "$REMOTE" "$TAG"
         ;;
     *)
-        git push origin "$CURRENT_BRANCH"
-        git push origin "$TAG"
+        git push "$REMOTE" "$CURRENT_BRANCH"
+        git push "$REMOTE" "$TAG"
         echo "Release publicada correctamente."
         ;;
 esac

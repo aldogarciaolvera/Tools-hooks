@@ -25,10 +25,10 @@ Formato:
 
 Ejemplos:
 
-  [AGO] - main - feat: agrega respaldo remoto
-  [AGO] - develop - fix: corrige validación SHA-256
-  [AGO] - main - docs: actualiza README
-  [AGO] - main - feat(postgres): agrega restauración selectiva
+  [TUS_INICIALES] - main - feat: agrega respaldo remoto
+  [TUS_INICIALES] - develop - fix: corrige validación SHA-256
+  [TUS_INICIALES] - main - docs: actualiza README
+  [TUS_INICIALES] - main - feat(postgres): agrega restauración selectiva
 
 Tipos permitidos:
 

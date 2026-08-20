@@ -183,7 +183,7 @@ git remote add origin https://github.com/usuario/MiProyecto.git
 ### 2. Inicializar el proyecto
 
 ```bash
-git-project-init --version 0.1.0
+git-project-init --version 0.0.1
 ```
 
 El comando crea, solamente cuando no existan:
