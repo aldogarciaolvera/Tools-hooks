@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 
 set -Eeuo pipefail
 
@@ -59,6 +59,7 @@ validate_file "VERSION"
 validate_file "CHANGELOG.md"
 validate_file "DESIGN.md"
 validate_file "AGENTS.md"
+validate_file "ARCHITECTURE.md"
 validate_license
 
 if [[ -s VERSION ]]; then

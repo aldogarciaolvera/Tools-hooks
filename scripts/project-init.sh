@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 
 set -Eeuo pipefail
 
@@ -104,6 +104,97 @@ EOF
 EOF
         printf 'Creado: AGENTS.md\n'
     fi
+}
+
+create_architecture_file() {
+    local template="$1"
+
+    if [[ -e ARCHITECTURE.md ]]; then
+        printf 'ARCHITECTURE.md ya existe. No se modificara.\n'
+        return
+    fi
+
+    local content=""
+
+    case "$template" in
+        react|reactnative)
+            content="# Arquitectura del Proyecto (React / React Native)
+
+Este proyecto promueve una Clean Architecture o Feature-Sliced Design.
+
+## Estructura Sugerida
+
+- \`src/assets/\`: Recursos estaticos.
+- \`src/components/\`: Componentes UI reutilizables.
+- \`src/features/\`: Modulos agrupados por funcionalidad.
+- \`src/hooks/\`: Hooks personalizados.
+- \`src/services/\`: Integracion con APIs externas.
+- \`src/store/\`: Manejo de estado.
+- \`src/utils/\`: Utilidades generales.
+"
+            ;;
+        angular)
+            content="# Arquitectura del Proyecto (Angular)
+
+Este proyecto promueve modularidad y arquitectura limpia.
+
+## Estructura Sugerida
+
+- \`src/app/core/\`: Servicios singleton y configuraciones.
+- \`src/app/shared/\`: Componentes y directivas comunes.
+- \`src/app/features/\`: Modulos especificos (lazy loaded).
+"
+            ;;
+        dotnet|.net)
+            content="# Arquitectura del Proyecto (.NET)
+
+Este proyecto promueve una Clean Architecture.
+
+## Estructura Sugerida
+
+- \`Core/\`: Entidades, interfaces y reglas de negocio.
+- \`Application/\`: Casos de uso y DTOs.
+- \`Infrastructure/\`: Acceso a datos y servicios externos.
+- \`API/\`: Controladores y configuracion web.
+"
+            ;;
+        python)
+            content="# Arquitectura del Proyecto (Python)
+
+Este proyecto promueve una separacion de responsabilidades, siguiendo principios de Clean Architecture.
+
+## Estructura Sugerida
+
+- \`app/api/\`: Endpoints de la API.
+- \`app/core/\`: Configuraciones centrales.
+- \`app/models/\`: Modelos de dominio y Base de Datos.
+- \`app/services/\`: Logica de negocio.
+- \`app/tests/\`: Pruebas.
+"
+            ;;
+        astro)
+            content="# Arquitectura del Proyecto (Astro)
+
+Este proyecto utiliza arquitectura en islas.
+
+## Estructura Sugerida
+
+- \`src/components/\`: Componentes UI.
+- \`src/layouts/\`: Plantillas de vista.
+- \`src/pages/\`: Enrutamiento por archivos.
+- \`src/lib/\`: Utilidades compartidas.
+"
+            ;;
+        *)
+            content="# Arquitectura del Proyecto
+
+<!-- Agrega aqui la documentacion sobre la arquitectura, patron de diseno, o clean architecture utilizada. -->
+"
+            ;;
+    esac
+
+    printf "%s\n" "$content" > ARCHITECTURE.md
+    printf 'Creado: ARCHITECTURE.md\n'
 }
 
 create_base_config_files() {
@@ -540,6 +631,7 @@ create_base_config_files
 create_version
 create_changelog
 create_docs_files
+create_architecture_file "$TEMPLATE_NAME"
 handle_license
 create_repository_validations
 
