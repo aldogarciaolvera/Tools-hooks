@@ -18,8 +18,6 @@ PROJECT_CHECK="$TOOLS_HOOKS_ROOT/scripts/project-check.sh"
 [[ -f "$PROJECT_CHECK" ]] ||
     die "No se encontró project-check.sh en: $PROJECT_CHECK"
 
-bash "$PROJECT_CHECK"
-
 INITIAL_VERSION="0.0.1"
 LICENSE_MODE="ask"
 
