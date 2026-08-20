@@ -1,4 +1,4 @@
-﻿[CmdletBinding()]
+[CmdletBinding()]
 param(
     [switch]$Help
 )
@@ -55,9 +55,10 @@ $ScriptsDir = Join-Path $RepoRoot "scripts"
 $BinDir = Join-Path $env:USERPROFILE ".local\bin"
 
 $Commands = @{
-    "git-project-init"  = Join-Path $ScriptsDir "project-init.sh"
-    "git-project-check" = Join-Path $ScriptsDir "project-check.sh"
-    "git-release"       = Join-Path $ScriptsDir "release.sh"
+    "git-project-init"   = Join-Path $ScriptsDir "project-init.sh"
+    "git-project-check"  = Join-Path $ScriptsDir "project-check.sh"
+    "git-project-update" = Join-Path $ScriptsDir "project-update.sh"
+    "git-release"        = Join-Path $ScriptsDir "release.sh"
 }
 
 Write-Step "Validando requisitos"
@@ -194,6 +195,7 @@ Write-Host ""
 Write-Host "Prueba después:"
 Write-Host "  git-project-check"
 Write-Host "  git-project-init --help"
+Write-Host "  git-project-update"
 Write-Host "  git-release --help"
 Write-Host ""
 Write-Host "Importante: no muevas ni elimines esta carpeta:"

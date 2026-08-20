@@ -57,6 +57,8 @@ printf 'Validando archivos del proyecto...\n\n'
 
 validate_file "VERSION"
 validate_file "CHANGELOG.md"
+validate_file "DESIGN.md"
+validate_file "AGENTS.md"
 validate_license
 
 if [[ -s VERSION ]]; then

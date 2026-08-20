@@ -12,9 +12,10 @@ Tools-hooks instala hooks globales, valida mensajes con Conventional Commits, pr
 - Validación de scripts Bash antes de confirmar cambios.
 - Validaciones específicas de cada repositorio.
 - Inicialización de proyectos con `git-project-init`.
+- Actualización de proyectos existentes con `git-project-update`.
 - Validación de proyectos con `git-project-check`.
 - Releases con Semantic Versioning mediante `git-release`.
-- Actualización automática de `VERSION` y `CHANGELOG.md`.
+- Actualización automática de `VERSION` y `CHANGELOG.md` basado en los commits.
 - Creación de commits y tags de release.
 - Push automático de la rama y el tag después de confirmarlo.
 - Instalación compatible con Linux, macOS y Windows.
@@ -36,7 +37,7 @@ En Windows, los scripts siguen ejecutándose mediante **Git Bash**, pero el inst
 
 - Git.
 - Bash.
-- Utilidades estándar como `grep`, `sed`, `mktemp` y `date`.
+- Utilidades estándar como `grep`, `sed`, `mktemp`, `date` y `curl`.
 
 ### Windows
 
@@ -91,6 +92,7 @@ El instalador:
 - configura `core.hooksPath`;
 - instala `git-project-init`;
 - instala `git-project-check`;
+- instala `git-project-update`;
 - instala `git-release`;
 - agrega `~/.local/bin` al `PATH` cuando sea necesario.
 
@@ -134,6 +136,7 @@ El instalador de Windows:
 - instala:
   - `git-project-init`;
   - `git-project-check`;
+  - `git-project-update`;
   - `git-release`;
 - agrega esa carpeta al `PATH` del usuario.
 
@@ -145,6 +148,7 @@ Cierra y vuelve a abrir PowerShell, CMD o Windows Terminal después de instalar.
 git config --global --get core.hooksPath
 where.exe git-project-init
 where.exe git-project-check
+where.exe git-project-update
 where.exe git-release
 ```
 
@@ -192,11 +196,22 @@ El comando crea, solamente cuando no existan:
 VERSION
 CHANGELOG.md
 LICENSE
+DESIGN.md
+AGENTS.md
+README.md (si no existe)
+.editorconfig
+.prettierrc
+.gitignore (basado en la plantilla)
+Dockerfile (y docker-compose.yml si usas una plantilla)
 .githooks/pre-commit
 .githooks/pre-push
 ```
 
 No sobrescribe archivos existentes.
+
+Adicionalmente, se generan dos plantillas para documentar el proyecto:
+- **`DESIGN.md`**: Para documentar la arquitectura, el diseño y las decisiones técnicas.
+- **`AGENTS.md`**: Para definir configuraciones, roles e instrucciones para agentes (por ejemplo, IA o flujos de automatización).
 
 ### 3. Trabajar normalmente
 
@@ -224,7 +239,7 @@ El comando:
 1. ejecuta `git-project-check`;
 2. comprueba que no existan cambios sin confirmar;
 3. actualiza `VERSION`;
-4. agrega una entrada a `CHANGELOG.md`;
+4. genera una entrada automática en `CHANGELOG.md` agrupando los *features* y *fixes* desde el último tag;
 5. crea el commit de release;
 6. crea el tag anotado `v1.2.0`;
 7. pregunta si deseas publicar;
@@ -265,6 +280,15 @@ No crear una licencia:
 git-project-init --no-license
 ```
 
+Inicializar con una plantilla básica:
+
+```bash
+git-project-init --template react
+```
+
+Tecnologías soportadas: `react` (Vite), `astro`, `angular`, `reactnative` (Expo), `dotnet` (Web API) y `python` (FastAPI). Para frameworks de JS/TS, se utiliza `pnpm` de forma predeterminada.
+Al especificar una plantilla, se genera también un `Dockerfile` base (y `docker-compose.yml`) optimizado para esa tecnología.
+
 Mostrar ayuda:
 
 ```bash
@@ -285,10 +309,21 @@ Entre otras validaciones, revisa:
 - que la versión utilice el formato `MAJOR.MINOR.PATCH`;
 - que exista `CHANGELOG.md`;
 - que el changelog contenga `# Changelog`;
+- que exista `DESIGN.md` y `AGENTS.md`;
 - si existe una licencia;
 - si la licencia detectada parece ser MIT.
 
 El comando devuelve un código distinto de cero cuando encuentra un error bloqueante.
+
+### `git-project-update`
+
+Aplica las nuevas reglas de configuración a un repositorio antiguo sin alterar su versión ni su `CHANGELOG`.
+
+```bash
+git-project-update
+```
+
+Inyectará archivos como `DESIGN.md`, `AGENTS.md`, `.prettierrc`, y `.editorconfig` si no existían previamente.
 
 ### `git-release`
 
@@ -526,6 +561,7 @@ Elimina los comandos:
 ```bash
 rm -f ~/.local/bin/git-project-init
 rm -f ~/.local/bin/git-project-check
+rm -f ~/.local/bin/git-project-update
 rm -f ~/.local/bin/git-release
 ```
 
@@ -544,6 +580,7 @@ Elimina los wrappers:
 ```powershell
 Remove-Item "$HOME\.local\bin\git-project-init.cmd" -ErrorAction SilentlyContinue
 Remove-Item "$HOME\.local\bin\git-project-check.cmd" -ErrorAction SilentlyContinue
+Remove-Item "$HOME\.local\bin\git-project-update.cmd" -ErrorAction SilentlyContinue
 Remove-Item "$HOME\.local\bin\git-release.cmd" -ErrorAction SilentlyContinue
 ```
 
@@ -617,9 +654,7 @@ git remote add origin https://github.com/usuario/repositorio.git
 
 ## Roadmap
 
-- `git-project-update` para actualizar proyectos existentes.
 - Soporte para más licencias.
-- Plantillas de `.gitignore`.
 - Plantillas opcionales de README.
 - Configuración por proyecto.
 - Pruebas automatizadas.

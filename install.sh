@@ -26,6 +26,7 @@ El instalador realiza únicamente estas acciones:
 - Instala los comandos globales:
     git-project-init
     git-project-check
+    git-project-update
     git-release
 EOF
 }
@@ -67,6 +68,7 @@ validate_files() {
         "$HOOKS_DIR/pre-push"
         "$SCRIPTS_DIR/project-init.sh"
         "$SCRIPTS_DIR/project-check.sh"
+        "$SCRIPTS_DIR/project-update.sh"
         "$SCRIPTS_DIR/release.sh"
     )
 
@@ -185,6 +187,10 @@ install_commands() {
         "git-project-check"
 
     install_command \
+        "$SCRIPTS_DIR/project-update.sh" \
+        "git-project-update"
+
+    install_command \
         "$SCRIPTS_DIR/release.sh" \
         "git-release"
 }
@@ -198,6 +204,7 @@ verify_installation() {
     for command_name in \
         git-project-init \
         git-project-check \
+        git-project-update \
         git-release
     do
         if [[ -x "$LOCAL_BIN/$command_name" ]]; then
@@ -255,6 +262,7 @@ print_summary() {
     printf '\nComandos disponibles:\n'
     printf '  git-project-init\n'
     printf '  git-project-check\n'
+    printf '  git-project-update\n'
     printf '  git-release\n'
 
     if [[ ":$PATH:" != *":$LOCAL_BIN:"* ]]; then

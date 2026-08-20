@@ -63,10 +63,51 @@ cleanup() {
 
 trap cleanup EXIT
 
+LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+if [[ -z "$LATEST_TAG" ]]; then
+    COMMITS=$(git log --pretty=format:"%s")
+else
+    COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"%s")
+fi
+
+get_commits_by_type() {
+    local type="$1"
+    echo "$COMMITS" | grep -iE "(^| - )${type}(\([^)]*\))?:" | sed -E "s/.* - (${type}(\([^)]*\))?:)/\1/i" || true
+}
+
+FEATURES=$(get_commits_by_type "feat")
+FIXES=$(get_commits_by_type "fix")
+DOCS=$(get_commits_by_type "docs")
+REFACTOR=$(get_commits_by_type "refactor")
+PERF=$(get_commits_by_type "perf")
+
+write_section() {
+    local title="$1"
+    local items="$2"
+    if [[ -n "$items" ]]; then
+        printf '### %s\n\n' "$title"
+        while IFS= read -r line; do
+            [[ -n "$line" ]] && printf -- '- %s\n' "$line"
+        done <<< "$items"
+        printf '\n'
+    fi
+}
+
 {
     printf '## [%s] - %s\n\n' "$NEW_VERSION" "$DATE"
-    printf '### Changed\n\n'
-    printf -- '- Preparación de la versión %s.\n\n' "$NEW_VERSION"
+    
+    write_section "Features" "$FEATURES"
+    write_section "Bug Fixes" "$FIXES"
+    write_section "Performance" "$PERF"
+    write_section "Refactoring" "$REFACTOR"
+    write_section "Documentation" "$DOCS"
+    
+    if [[ -z "$FEATURES" && -z "$FIXES" && -z "$PERF" && -z "$REFACTOR" && -z "$DOCS" ]]; then
+        printf '### Changed\n\n'
+        printf -- '- Preparación de la versión %s.\n\n' "$NEW_VERSION"
+    fi
+    
     cat CHANGELOG.md
 } > "$CHANGELOG_TMP"
 
