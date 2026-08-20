@@ -28,17 +28,17 @@ Uso:
   git-project-init [opciones]
 
 Opciones:
-  --version X.Y.Z   Versión inicial. Por defecto: 0.0.1
-  --license         Crea la licencia MIT sin preguntar.
-  --no-license      No crea ninguna licencia.
-  --template TIPO   Instala una plantilla básica (react, astro, angular, reactnative, dotnet, python).
-  -h, --help        Muestra esta ayuda.
+  -v, --version X.Y.Z   Versión inicial. Por defecto: 0.0.1
+  --license             Crea la licencia MIT sin preguntar.
+  --no-license          No crea ninguna licencia.
+  -t, --template TIPO   Instala una plantilla básica (react, astro, angular, reactnative, dotnet, python).
+  -h, --help            Muestra esta ayuda.
 
 Ejemplos:
   git-project-init
-  git-project-init --version 0.0.1  
-  git-project-init --version 0.0.1 --license
-  git-project-init --template react
+  git-project-init -v 0.0.1  
+  git-project-init -v 0.0.1 --license
+  git-project-init -t react
 EOF
 }
 
@@ -489,9 +489,9 @@ EOF
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --version)
+        -v|--version)
             [[ $# -ge 2 ]] ||
-                die "Debes indicar una versión después de --version"
+                die "Debes indicar una versión después de $1"
 
             INITIAL_VERSION="$2"
             shift 2
@@ -504,7 +504,7 @@ while [[ $# -gt 0 ]]; do
             LICENSE_MODE="no"
             shift
             ;;
-        --template)
+        -t|--template)
             [[ $# -ge 2 ]] ||
                 die "Debes indicar una tecnología después de $1"
             TEMPLATE_NAME="$2"

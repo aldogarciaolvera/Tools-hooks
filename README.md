@@ -187,8 +187,10 @@ git remote add origin https://github.com/usuario/MiProyecto.git
 ### 2. Inicializar el proyecto
 
 ```bash
-git-project-init --version 0.0.1
+git-project-init -v 0.0.1 -t react
 ```
+
+*Nota: puedes omitir `-t react` si no necesitas una plantilla base, o cambiarlo por otra tecnología (ej. `astro`, `python`).*
 
 El comando crea, solamente cuando no existan:
 
@@ -265,7 +267,8 @@ git-project-init
 Usar una versión inicial específica:
 
 ```bash
-git-project-init --version 1.0.0
+git-project-init -v 1.0.0
+# o git-project-init --version 1.0.0
 ```
 
 Crear una licencia MIT sin preguntar:
@@ -283,7 +286,8 @@ git-project-init --no-license
 Inicializar con una plantilla básica:
 
 ```bash
-git-project-init --template react
+git-project-init -t react
+# o git-project-init --template react
 ```
 
 Tecnologías soportadas: `react` (Vite), `astro`, `angular`, `reactnative` (Expo), `dotnet` (Web API) y `python` (FastAPI). Para frameworks de JS/TS, se utiliza `pnpm` de forma predeterminada.
