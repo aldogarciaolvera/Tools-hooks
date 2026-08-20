@@ -1,3 +1,14 @@
+## [1.4.0] - 2026-08-20
+
+### Features
+
+- feat: Archivos restantes
+- feat: Update
+
+### Bug Fixes
+
+- fix: Ejecucion prematura
+
 ## [1.3.2] - 2026-07-22
 
 ### Changed
