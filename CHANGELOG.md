@@ -1,3 +1,9 @@
+## [1.4.4] - 2026-09-11
+
+### Features
+
+- feat: typescript react-native
+
 ## [1.4.3] - 2026-08-20
 
 ### Features
