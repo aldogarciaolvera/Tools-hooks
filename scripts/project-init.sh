@@ -525,7 +525,7 @@ install_template() {
                 printf 'AVISO: pnpm no esta instalado.\n'
                 return
             fi
-            pnpm create expo-app temp-app --template blank
+            pnpm create expo-app temp-app --template blank-typescript
             cp -a temp-app/. .
             rm -rf temp-app
             pnpm install
