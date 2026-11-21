@@ -4,6 +4,12 @@ Todos los cambios relevantes de este proyecto se documentarán en este archivo.
 
 El formato está basado en Keep a Changelog y el proyecto utiliza Semantic Versioning.
 
+## [1.4.5] - 2026-11-20
+
+### Features
+
+- Reestructura de los comandos y eliminacion de Redundancia
+
 ## [1.4.4] - 2026-09-11
 
 ### Features
