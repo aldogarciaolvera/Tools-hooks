@@ -2,590 +2,106 @@
 
 set -Eeuo pipefail
 
-die() {
-    printf 'ERROR: %s\n' "$*" >&2
-    exit 1
+resolve_bootstrap_root() {
+    local src="${BASH_SOURCE[0]}"
+    local dir
+    while [[ -L "$src" ]]; do
+        dir="$(cd -P -- "$(dirname -- "$src")" && pwd)"
+        src="$(readlink "$src")"
+        [[ "$src" == /* ]] || src="$dir/$src"
+    done
+    cd -P -- "$(dirname -- "$src")/.." && pwd
 }
 
-TOOLS_HOOKS_ROOT="$(git config --global --get tools-hooks.root || true)"
-
-if [[ -z "$TOOLS_HOOKS_ROOT" ]]; then
-    die "tools-hooks.root no esta configurado. Ejecuta ./install.sh"
-fi
+TOOLS_HOOKS_ROOT="$(resolve_bootstrap_root)"
+# shellcheck source=scripts/lib/common.sh
+source "$TOOLS_HOOKS_ROOT/scripts/lib/common.sh"
+# shellcheck source=scripts/lib/generators.sh
+source "$TOOLS_HOOKS_ROOT/scripts/lib/generators.sh"
 
 PROJECT_CHECK="$TOOLS_HOOKS_ROOT/scripts/project-check.sh"
-
 [[ -f "$PROJECT_CHECK" ]] ||
     die "No se encontro project-check.sh en: $PROJECT_CHECK"
 
 INITIAL_VERSION="0.0.1"
 LICENSE_MODE="ask"
-TEMPLATE_NAME=""
+TEMPLATE_NAME="blank"
+TEMPLATE_EXPLICIT=0
+MINIMAL_MODE=0
+NON_INTERACTIVE=0
+EXPLICIT_MODULES=0
+
+OPT_CHANGELOG=0
+OPT_README=0
+OPT_DESIGN=0
+OPT_AGENTS=0
+OPT_ARCHITECTURE=0
+OPT_EDITORCONFIG=0
+OPT_PRETTIER=0
+OPT_GITIGNORE=0
+OPT_DOCKER=0
+OPT_HOOKS=0
+OPT_SKILLS=0
 
 show_help() {
     cat <<'EOF'
 Uso:
   git-project-init [opciones]
 
-Opciones:
+Por defecto inicializa una plantilla en blanco minima:
+  - VERSION (0.0.1, obligatorio siempre)
+  - LICENSE (MIT, opcional o interactivo)
+Todos los demas archivos, plantillas y skills son opcionales.
+
+Opciones generales:
   -v, --version X.Y.Z   Version inicial. Por defecto: 0.0.1
-  --license             Crea la licencia MIT sin preguntar.
-  --no-license          No crea ninguna licencia.
-  -t, --template TIPO   Instala una plantilla basica (react, astro, angular, reactnative, dotnet, python).
+  -t, --template TIPO   Plantilla (blank, react, astro, angular, reactnative, dotnet, python).
+  --blank, --minimal    Solo VERSION y licencia (sin preguntas de extras).
+  --license             Crea licencia MIT sin preguntar.
+  --no-license          No crea archivo de licencia.
+  -y, --yes             Modo no interactivo (sin preguntas).
   -h, --help            Muestra esta ayuda.
 
+Modulos opcionales:
+  --changelog           Crea CHANGELOG.md
+  --readme              Crea README.md
+  --docs                Crea DESIGN.md, AGENTS.md y ARCHITECTURE.md
+  --design              Crea DESIGN.md
+  --agents              Crea AGENTS.md
+  --architecture        Crea ARCHITECTURE.md
+  --editorconfig        Crea .editorconfig
+  --prettier            Crea .prettierrc
+  --gitignore           Crea o complementa .gitignore
+  --docker              Crea Dockerfile y .dockerignore (requiere plantilla != blank)
+  --hooks               Crea .githooks/pre-commit y .githooks/pre-push
+  --skills              Ejecuta npx -y autoskills@latest (desactivado por defecto)
+  --all                 Activa todos los archivos opcionales (excepto --skills)
+
 Ejemplos:
-  git-project-init
-  git-project-init -v 0.0.1  
-  git-project-init -v 0.0.1 --license
-  git-project-init -t react
+  git-project-init --minimal --license        # Ideal para repo de skills o plantilla limpia
+  git-project-init -v 0.1.0 --readme --license
+  git-project-init -t react --gitignore --docker --all
+  git-project-init --skills --readme
 EOF
 }
-
-is_semver() {
-    [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
-}
-
-create_version() {
-    if [[ -e VERSION ]]; then
-        printf 'VERSION ya existe. No se modificara.\n'
-        return
-    fi
-
-    printf '%s\n' "$INITIAL_VERSION" > VERSION
-    printf 'Creado: VERSION (%s)\n' "$INITIAL_VERSION"
-}
-
-create_changelog() {
-    if [[ -e CHANGELOG.md ]]; then
-        printf 'CHANGELOG.md ya existe. No se modificara.\n'
-        return
-    fi
-
-    local current_date
-    current_date="$(date +'%Y-%m-%d')"
-
-    cat > CHANGELOG.md <<EOF
-# Changelog
-
-Todos los cambios relevantes de este proyecto se documentaran en este archivo.
-
-El formato esta basado en Keep a Changelog y el proyecto utiliza Semantic Versioning.
-
-## [$INITIAL_VERSION] - $current_date
-
-### Added
-
-- Inicializacion del proyecto.
-EOF
-
-    printf 'Creado: CHANGELOG.md\n'
-}
-
-create_docs_files() {
-    if [[ -e DESIGN.md ]]; then
-        printf 'DESIGN.md ya existe. No se modificara.\n'
-    else
-        cat > DESIGN.md <<'EOF'
-# Diseno del Proyecto
-
-<!-- Agrega aqui la documentacion sobre la arquitectura, diseno y decisiones tecnicas del proyecto -->
-EOF
-        printf 'Creado: DESIGN.md\n'
-    fi
-
-    if [[ -e AGENTS.md ]]; then
-        printf 'AGENTS.md ya existe. No se modificara.\n'
-    else
-        cat > AGENTS.md <<'EOF'
-# Agentes y Automatizacion
-
-<!-- Agrega aqui la configuracion, roles o instrucciones para los agentes (por ejemplo, IA, flujos de trabajo) -->
-EOF
-        printf 'Creado: AGENTS.md\n'
-    fi
-}
-
-create_architecture_file() {
-    local template="$1"
-
-    if [[ -e ARCHITECTURE.md ]]; then
-        printf 'ARCHITECTURE.md ya existe. No se modificara.\n'
-        return
-    fi
-
-    local content=""
-
-    case "$template" in
-        react|reactnative)
-            content="# Arquitectura del Proyecto (React / React Native)
-
-Este proyecto promueve una Clean Architecture o Feature-Sliced Design.
-
-## Estructura Sugerida
-
-- \`src/assets/\`: Recursos estaticos.
-- \`src/components/\`: Componentes UI reutilizables.
-- \`src/features/\`: Modulos agrupados por funcionalidad.
-- \`src/hooks/\`: Hooks personalizados.
-- \`src/services/\`: Integracion con APIs externas.
-- \`src/store/\`: Manejo de estado.
-- \`src/utils/\`: Utilidades generales.
-"
-            ;;
-        angular)
-            content="# Arquitectura del Proyecto (Angular)
-
-Este proyecto promueve modularidad y arquitectura limpia.
-
-## Estructura Sugerida
-
-- \`src/app/core/\`: Servicios singleton y configuraciones.
-- \`src/app/shared/\`: Componentes y directivas comunes.
-- \`src/app/features/\`: Modulos especificos (lazy loaded).
-"
-            ;;
-        dotnet|.net)
-            content="# Arquitectura del Proyecto (.NET)
-
-Este proyecto promueve una Clean Architecture.
-
-## Estructura Sugerida
-
-- \`Core/\`: Entidades, interfaces y reglas de negocio.
-- \`Application/\`: Casos de uso y DTOs.
-- \`Infrastructure/\`: Acceso a datos y servicios externos.
-- \`API/\`: Controladores y configuracion web.
-"
-            ;;
-        python)
-            content="# Arquitectura del Proyecto (Python)
-
-Este proyecto promueve una separacion de responsabilidades, siguiendo principios de Clean Architecture.
-
-## Estructura Sugerida
-
-- \`app/api/\`: Endpoints de la API.
-- \`app/core/\`: Configuraciones centrales.
-- \`app/models/\`: Modelos de dominio y Base de Datos.
-- \`app/services/\`: Logica de negocio.
-- \`app/tests/\`: Pruebas.
-"
-            ;;
-        astro)
-            content="# Arquitectura del Proyecto (Astro)
-
-Este proyecto utiliza arquitectura en islas.
-
-## Estructura Sugerida
-
-- \`src/components/\`: Componentes UI.
-- \`src/layouts/\`: Plantillas de vista.
-- \`src/pages/\`: Enrutamiento por archivos.
-- \`src/lib/\`: Utilidades compartidas.
-"
-            ;;
-        *)
-            content="# Arquitectura del Proyecto
-
-<!-- Agrega aqui la documentacion sobre la arquitectura, patron de diseno, o clean architecture utilizada. -->
-"
-            ;;
-    esac
-
-    printf "%s\n" "$content" > ARCHITECTURE.md
-    printf 'Creado: ARCHITECTURE.md\n'
-}
-
-create_base_config_files() {
-    local project_name
-    project_name="$(basename "$REPOSITORY_ROOT")"
-
-    if [[ ! -e README.md ]]; then
-        cat > README.md <<EOF
-# $project_name
-
-<!-- Agrega una breve descripcion de tu proyecto aqui -->
-
-## Instalacion
-
-\`\`\`bash
-# Instrucciones de instalacion
-\`\`\`
-
-## Uso
-
-\`\`\`bash
-# Instrucciones de uso
-\`\`\`
-EOF
-        printf 'Creado: README.md\n'
-    else
-        printf 'README.md ya existe. No se modificara.\n'
-    fi
-
-    if [[ ! -e .editorconfig ]]; then
-        cat > .editorconfig <<'EOF'
-root = true
-
-[*]
-charset = utf-8
-indent_style = space
-indent_size = 2
-end_of_line = lf
-insert_final_newline = true
-trim_trailing_whitespace = true
-EOF
-        printf 'Creado: .editorconfig\n'
-    else
-        printf '.editorconfig ya existe. No se modificara.\n'
-    fi
-
-    if [[ ! -e .prettierrc ]]; then
-        cat > .prettierrc <<'EOF'
-{
-  "tabWidth": 2,
-  "useTabs": false,
-  "semi": true,
-  "singleQuote": true,
-  "trailingComma": "es5"
-}
-EOF
-        printf 'Creado: .prettierrc\n'
-    else
-        printf '.prettierrc ya existe. No se modificara.\n'
-    fi
-}
-
-setup_gitignore() {
-    local template="$1"
-    local ignore_type=""
-
-    case "$template" in
-        react|angular|reactnative|astro)
-            ignore_type="node"
-            ;;
-        dotnet|.net)
-            ignore_type="dotnetcore"
-            ;;
-        python)
-            ignore_type="python"
-            ;;
-        *)
-            ignore_type="macos,windows,linux"
-            ;;
-    esac
-
-    if command -v curl >/dev/null 2>&1; then
-        if [[ ! -e .gitignore ]]; then
-            curl -sL "https://www.toptal.com/developers/gitignore/api/$ignore_type" > .gitignore
-            printf 'Creado: .gitignore (basado en %s)\n' "$ignore_type"
-        else
-            # Solo anadir un salto de linea y adjuntar lo descargado para complementar
-            echo "" >> .gitignore
-            echo "# --- Adiciones automaticas de git-project-init ($ignore_type) ---" >> .gitignore
-            curl -sL "https://www.toptal.com/developers/gitignore/api/$ignore_type" >> .gitignore
-            printf 'Actualizado: .gitignore (complementado con %s)\n' "$ignore_type"
-        fi
-    else
-        printf 'AVISO: curl no esta instalado, no se pudo descargar .gitignore avanzado.\n'
-    fi
-}
-
-setup_docker() {
-    local template="$1"
-    local project_name
-    project_name="$(basename "$REPOSITORY_ROOT")"
-
-    if [[ -z "$template" ]]; then
-        return
-    fi
-
-    if [[ ! -e Dockerfile ]]; then
-        case "$template" in
-            react|astro|angular)
-                cat > Dockerfile <<EOF
-# Build stage
-FROM node:26-alpine AS build
-WORKDIR /app
-COPY package.json pnpm-lock.yaml* ./
-RUN npm install -g pnpm && pnpm install
-COPY . .
-RUN pnpm run build
-
-# Serve stage
-FROM nginx:alpine
-# El directorio final de build puede variar (ej. dist, build, out)
-COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-EOF
-                ;;
-            reactnative)
-                cat > Dockerfile <<EOF
-FROM node:26-alpine
-WORKDIR /app
-COPY package.json pnpm-lock.yaml* ./
-RUN npm install -g pnpm && pnpm install
-COPY . .
-EXPOSE 8081
-CMD ["pnpm", "start"]
-EOF
-                ;;
-            dotnet|.net)
-                cat > Dockerfile <<EOF
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
-WORKDIR /src
-COPY *.csproj ./
-RUN dotnet restore
-COPY . .
-RUN dotnet publish -c Release -o /app/publish
-
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
-WORKDIR /app
-COPY --from=build /app/publish .
-EXPOSE 8080
-# Asegurate de que el nombre del DLL coincida con el nombre de tu proyecto
-ENTRYPOINT ["dotnet", "${project_name}.dll"]
-EOF
-                ;;
-            python)
-                cat > Dockerfile <<EOF
-FROM python:3.11-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
-EXPOSE 8000
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-EOF
-                ;;
-        esac
-        
-        if [[ -s Dockerfile ]]; then
-            printf 'Creado: Dockerfile\n'
-        fi
-    else
-        printf 'Dockerfile ya existe. No se modificara.\n'
-    fi
-}
-
-create_mit_license() {
-    if [[ -e LICENSE ]] ||
-       [[ -e LICENSE.md ]] ||
-       [[ -e LICENSE.txt ]]; then
-        printf 'El proyecto ya contiene un archivo de licencia.\n'
-        return
-    fi
-
-    local current_year
-    local copyright_holder
-
-    current_year="$(date +'%Y')"
-    copyright_holder="$(git config --get user.name 2>/dev/null || true)"
-
-    if [[ -z "$copyright_holder" ]]; then
-        copyright_holder="${USER:-Unknown}"
-    fi
-
-    cat > LICENSE <<EOF
-MIT License
-
-Copyright (c) $current_year $copyright_holder
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-EOF
-
-    printf 'Creado: LICENSE (MIT)\n'
-}
-
-handle_license() {
-    local answer
-
-    if [[ -e LICENSE ]] ||
-       [[ -e LICENSE.md ]] ||
-       [[ -e LICENSE.txt ]]; then
-        printf 'El proyecto ya contiene un archivo de licencia.\n'
-        return
-    fi
-
-    case "$LICENSE_MODE" in
-        yes)
-            create_mit_license
-            ;;
-        no)
-            printf 'La licencia no fue creada.\n'
-            ;;
-        ask)
-            printf '\n'
-            read -r -p 'Deseas agregar la licencia MIT? [y/N]: ' answer
-
-            case "$answer" in
-                y|Y|yes|YES|si|SI|si|SI)
-                    create_mit_license
-                    ;;
-                *)
-                    printf 'La licencia no fue creada.\n'
-                    ;;
-            esac
-            ;;
-    esac
-}
-
-create_repository_validations() {
-    mkdir -p .githooks
-
-    if [[ ! -e .githooks/pre-commit ]]; then
-       cat > .githooks/pre-commit <<'EOF'
-#!/usr/bin/env bash
-set -Eeuo pipefail
-
-git-project-check
-EOF
-
-        chmod +x .githooks/pre-commit
-        printf 'Creado: .githooks/pre-commit\n'
-    else
-        printf '.githooks/pre-commit ya existe. No se modificara.\n'
-    fi
-
-    if [[ ! -e .githooks/pre-push ]]; then
-     cat > .githooks/pre-push <<'EOF'
-#!/usr/bin/env bash
-set -Eeuo pipefail
-
-git-project-check
-EOF
-
-        chmod +x .githooks/pre-push
-        printf 'Creado: .githooks/pre-push\n'
-    else
-        printf '.githooks/pre-push ya existe. No se modificara.\n'
-    fi
-}
-
-install_template() {
-    local template="$1"
-    
-    if [[ -z "$template" ]]; then
-        return
-    fi
-    
-    printf '\nInstalando plantilla para: %s\n' "$template"
-    
-    case "$template" in
-        react)
-            if ! command -v pnpm >/dev/null 2>&1; then
-                printf 'AVISO: pnpm no esta instalado. Instalalo para usar esta plantilla.\n'
-                return
-            fi
-            pnpm create vite@latest temp-app --template react
-            cp -a temp-app/. .
-            rm -rf temp-app
-            pnpm install
-            ;;
-        astro)
-            if ! command -v pnpm >/dev/null 2>&1; then
-                printf 'AVISO: pnpm no esta instalado.\n'
-                return
-            fi
-            pnpm create astro@latest temp-app --template minimal --install no --git no --yes
-            cp -a temp-app/. .
-            rm -rf temp-app
-            pnpm install
-            ;;
-        angular)
-            if ! command -v pnpm >/dev/null 2>&1; then
-                printf 'AVISO: pnpm no esta instalado.\n'
-                return
-            fi
-            npx -y @angular/cli@latest new temp-app --package-manager pnpm --skip-git --skip-install --defaults
-            cp -a temp-app/. .
-            rm -rf temp-app
-            pnpm install
-            ;;
-        reactnative)
-            if ! command -v pnpm >/dev/null 2>&1; then
-                printf 'AVISO: pnpm no esta instalado.\n'
-                return
-            fi
-            pnpm create expo-app temp-app --template blank-typescript
-            cp -a temp-app/. .
-            rm -rf temp-app
-            pnpm install
-            ;;
-        dotnet|.net)
-            if ! command -v dotnet >/dev/null 2>&1; then
-                printf 'AVISO: dotnet no esta instalado.\n'
-                return
-            fi
-            dotnet new webapi
-            ;;
-        python)
-            if command -v python3 >/dev/null 2>&1; then
-                python3 -m venv venv
-            elif command -v python >/dev/null 2>&1; then
-                python -m venv venv
-            else
-                printf 'AVISO: python no esta instalado.\n'
-                return
-            fi
-            
-            if [[ -f "venv/Scripts/pip" ]]; then
-                venv/Scripts/pip install "fastapi[standard]"
-                venv/Scripts/pip freeze > requirements.txt
-            elif [[ -f "venv/bin/pip" ]]; then
-                venv/bin/pip install "fastapi[standard]"
-                venv/bin/pip freeze > requirements.txt
-            fi
-
-            cat > main.py <<'EOF'
-from fastapi import FastAPI
-
-app = FastAPI()
-
-@app.get("/")
-def read_root():
-    return {"message": "Hello World API"}
-EOF
-            if grep -q "venv/" .gitignore 2>/dev/null; then
-                :
-            else
-                echo 'venv/' >> .gitignore
-            fi
-            ;;
-        *)
-            die "Plantilla desconocida: $template. Opciones validas: react, astro, angular, reactnative, dotnet, python."
-            ;;
-    esac
-    printf 'Plantilla instalada correctamente.\n'
-}
-
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -v|--version)
-            [[ $# -ge 2 ]] ||
-                die "Debes indicar una version despues de $1"
-
+            [[ $# -ge 2 ]] || die "Debes indicar una version despues de $1"
             INITIAL_VERSION="$2"
             shift 2
+            ;;
+        -t|--template)
+            [[ $# -ge 2 ]] || die "Debes indicar una tecnologia despues de $1"
+            TEMPLATE_NAME="$(normalize_template_name "$2")"
+            TEMPLATE_EXPLICIT=1
+            shift 2
+            ;;
+        --blank|--minimal)
+            TEMPLATE_NAME="blank"
+            MINIMAL_MODE=1
+            shift
             ;;
         --license)
             LICENSE_MODE="yes"
@@ -595,11 +111,85 @@ while [[ $# -gt 0 ]]; do
             LICENSE_MODE="no"
             shift
             ;;
-        -t|--template)
-            [[ $# -ge 2 ]] ||
-                die "Debes indicar una tecnologia despues de $1"
-            TEMPLATE_NAME="$2"
-            shift 2
+        --changelog)
+            OPT_CHANGELOG=1
+            EXPLICIT_MODULES=1
+            shift
+            ;;
+        --readme)
+            OPT_README=1
+            EXPLICIT_MODULES=1
+            shift
+            ;;
+        --docs)
+            OPT_DESIGN=1
+            OPT_AGENTS=1
+            OPT_ARCHITECTURE=1
+            EXPLICIT_MODULES=1
+            shift
+            ;;
+        --design)
+            OPT_DESIGN=1
+            EXPLICIT_MODULES=1
+            shift
+            ;;
+        --agents)
+            OPT_AGENTS=1
+            EXPLICIT_MODULES=1
+            shift
+            ;;
+        --architecture)
+            OPT_ARCHITECTURE=1
+            EXPLICIT_MODULES=1
+            shift
+            ;;
+        --editorconfig)
+            OPT_EDITORCONFIG=1
+            EXPLICIT_MODULES=1
+            shift
+            ;;
+        --prettier)
+            OPT_PRETTIER=1
+            EXPLICIT_MODULES=1
+            shift
+            ;;
+        --gitignore)
+            OPT_GITIGNORE=1
+            EXPLICIT_MODULES=1
+            shift
+            ;;
+        --docker)
+            OPT_DOCKER=1
+            EXPLICIT_MODULES=1
+            shift
+            ;;
+        --hooks)
+            OPT_HOOKS=1
+            EXPLICIT_MODULES=1
+            shift
+            ;;
+        --skills|--autoskills)
+            OPT_SKILLS=1
+            EXPLICIT_MODULES=1
+            shift
+            ;;
+        --all)
+            OPT_CHANGELOG=1
+            OPT_README=1
+            OPT_DESIGN=1
+            OPT_AGENTS=1
+            OPT_ARCHITECTURE=1
+            OPT_EDITORCONFIG=1
+            OPT_PRETTIER=1
+            OPT_GITIGNORE=1
+            OPT_HOOKS=1
+            OPT_DOCKER=1
+            EXPLICIT_MODULES=1
+            shift
+            ;;
+        -y|--yes|--no-interactive)
+            NON_INTERACTIVE=1
+            shift
             ;;
         -h|--help)
             show_help
@@ -612,44 +202,113 @@ while [[ $# -gt 0 ]]; do
 done
 
 is_semver "$INITIAL_VERSION" ||
-    die "La version debe tener el formato X.Y.Z"
+    die "La version debe tener el formato X.Y.Z (por ejemplo 0.0.1)"
 
-git rev-parse --is-inside-work-tree >/dev/null 2>&1 ||
-    die "Debes ejecutar este comando dentro de un repositorio Git"
+validate_template_name "$TEMPLATE_NAME"
+require_git_repo
 
-REPOSITORY_ROOT="$(git rev-parse --show-toplevel)"
-cd "$REPOSITORY_ROOT"
+prompt_template_selection() {
+    local choice=""
+    info ""
+    info "Plantillas disponibles: $SUPPORTED_TEMPLATES"
+    if ! IFS= read -r -p "Elige una plantilla [blank]: " choice; then
+        choice=""
+    fi
+    choice="${choice:-blank}"
+    choice="$(normalize_template_name "$choice")"
+    validate_template_name "$choice"
+    TEMPLATE_NAME="$choice"
+}
 
-printf 'Inicializando archivos del proyecto en:\n'
-printf '  %s\n\n' "$REPOSITORY_ROOT"
+prompt_optional_modules() {
+    info ""
+    if [[ "$TEMPLATE_EXPLICIT" -eq 0 ]]; then
+        if ! ask_yes_no "Deseas agregar archivos, plantillas o skills opcionales? (No = plantilla en blanco: VERSION y licencia)" "N"; then
+            return 0
+        fi
+        prompt_template_selection
+    else
+        if ! ask_yes_no "Deseas agregar archivos o skills opcionales adicionales (CHANGELOG, README, docs, Docker, hooks, skills)?" "N"; then
+            return 0
+        fi
+    fi
 
-install_template "$TEMPLATE_NAME"
-setup_gitignore "$TEMPLATE_NAME"
-setup_docker "$TEMPLATE_NAME"
+    ask_yes_no "Agregar CHANGELOG.md?" "N" && OPT_CHANGELOG=1
+    ask_yes_no "Agregar README.md?" "N" && OPT_README=1
+    ask_yes_no "Agregar documentacion (DESIGN.md, AGENTS.md, ARCHITECTURE.md)?" "N" && {
+        OPT_DESIGN=1
+        OPT_AGENTS=1
+        OPT_ARCHITECTURE=1
+    }
+    ask_yes_no "Agregar .editorconfig?" "N" && OPT_EDITORCONFIG=1
+    ask_yes_no "Agregar .prettierrc?" "N" && OPT_PRETTIER=1
+    ask_yes_no "Agregar o complementar .gitignore?" "N" && OPT_GITIGNORE=1
+    ask_yes_no "Agregar hooks locales (.githooks/)?" "N" && OPT_HOOKS=1
 
-create_base_config_files
-create_version
-create_changelog
-create_docs_files
-create_architecture_file "$TEMPLATE_NAME"
-handle_license
-create_repository_validations
+    if [[ "$TEMPLATE_NAME" != "blank" ]]; then
+        ask_yes_no "Agregar Dockerfile y .dockerignore para $TEMPLATE_NAME?" "N" && OPT_DOCKER=1
+    fi
 
-printf '\n'
-printf 'Ejecutando autoskills...\n'
-if command -v npx >/dev/null 2>&1; then
-    npx autoskills@latest
-else
-    printf 'AVISO: npx no esta instalado. Se omitira autoskills.\n'
+    ask_yes_no "Ejecutar autoskills (npx autoskills@latest)?" "N" && OPT_SKILLS=1
+    return 0
+}
+
+info "Inicializando proyecto en:"
+info "  $REPOSITORY_ROOT"
+info ""
+
+# 1. VERSION es obligatorio siempre.
+create_version_file "$INITIAL_VERSION"
+
+# 2. Licencia (por defecto en blanco incluye pregunta [Y/n] o creacion en --yes).
+case "$LICENSE_MODE" in
+    yes)
+        create_mit_license_file
+        ;;
+    no)
+        info "La licencia no fue creada."
+        ;;
+    ask)
+        if [[ "$NON_INTERACTIVE" -eq 1 ]]; then
+            create_mit_license_file
+        elif ask_yes_no "Deseas agregar la licencia MIT?" "Y"; then
+            create_mit_license_file
+        else
+            info "La licencia no fue creada."
+        fi
+        ;;
+esac
+
+# 3. Modulos y plantillas opcionales.
+if [[ "$MINIMAL_MODE" -eq 0 && "$EXPLICIT_MODULES" -eq 0 && "$NON_INTERACTIVE" -eq 0 ]]; then
+    prompt_optional_modules
 fi
 
-printf '\n'
-printf 'Validando resultado...\n\n'
+if [[ "$TEMPLATE_NAME" != "blank" ]]; then
+    install_project_template "$TEMPLATE_NAME"
+fi
 
-[[ -f "$PROJECT_CHECK" ]] ||
-    die "No se encontro project-check.sh en: $PROJECT_CHECK"
+[[ "$OPT_GITIGNORE" -eq 1 ]] && create_gitignore_file "$TEMPLATE_NAME"
+if [[ "$OPT_DOCKER" -eq 1 && "$TEMPLATE_NAME" != "blank" ]]; then
+    create_docker_files "$TEMPLATE_NAME"
+elif [[ "$OPT_DOCKER" -eq 1 && "$TEMPLATE_NAME" == "blank" && "$EXPLICIT_MODULES" -eq 1 ]]; then
+    warn "Se omitio --docker porque la plantilla es 'blank'."
+fi
+[[ "$OPT_EDITORCONFIG" -eq 1 ]] && create_editorconfig_file
+[[ "$OPT_PRETTIER" -eq 1 ]] && create_prettierrc_file
+[[ "$OPT_CHANGELOG" -eq 1 ]] && create_changelog_file "$INITIAL_VERSION"
+[[ "$OPT_README" -eq 1 ]] && create_readme_file
+[[ "$OPT_DESIGN" -eq 1 ]] && create_design_file
+[[ "$OPT_AGENTS" -eq 1 ]] && create_agents_file
+[[ "$OPT_ARCHITECTURE" -eq 1 ]] && create_architecture_file "$TEMPLATE_NAME"
+[[ "$OPT_HOOKS" -eq 1 ]] && create_githooks_files
+[[ "$OPT_SKILLS" -eq 1 ]] && run_autoskills
+
+info ""
+info "Validando resultado..."
+info ""
 
 bash "$PROJECT_CHECK"
 
-printf '\nProyecto inicializado correctamente.\n'
-
+info ""
+info "Proyecto inicializado correctamente."

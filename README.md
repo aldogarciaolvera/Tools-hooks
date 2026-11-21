@@ -1,24 +1,21 @@
 # Tools-hooks
 
-Herramientas reutilizables para configurar un flujo de trabajo consistente con Git en Linux, macOS y Windows.
+Herramientas modulares y reutilizables para configurar un flujo de trabajo consistente con Git en Linux, macOS y Windows.
 
-Tools-hooks instala hooks globales, valida mensajes con Conventional Commits, prepara repositorios y automatiza la creación y publicación de versiones.
+Tools-hooks instala hooks globales, valida mensajes con Conventional Commits, inicializa proyectos desde una base mínima (`VERSION` + licencia opcional) hasta stacks completos, y automatiza releases con Semantic Versioning y tags.
 
 ## Características
 
-- Hooks globales reutilizables.
-- Prefijo automático con iniciales y rama actual.
-- Validación de Conventional Commits.
-- Validación de scripts Bash antes de confirmar cambios.
-- Validaciones específicas de cada repositorio.
-- Inicialización de proyectos con `git-project-init`.
-- Actualización de proyectos existentes con `git-project-update`.
-- Validación de proyectos con `git-project-check`.
-- Releases con Semantic Versioning mediante `git-release`.
-- Actualización automática de `VERSION` y `CHANGELOG.md` basado en los commits.
-- Creación de commits y tags de release.
-- Push automático de la rama y el tag después de confirmarlo.
-- Instalación compatible con Linux, macOS y Windows.
+- Hooks globales reutilizables (`prepare-commit-msg`, `commit-msg`, `pre-commit`, `pre-push`).
+- Prefijo automático con iniciales (configurables o derivadas de `git config user.name`) y rama actual.
+- Validación de Conventional Commits (incluyendo `revert`, `cherry-pick` y `rebase` sin duplicar prefijos).
+- Validación de sintaxis Bash sobre contenido en *stage* antes de confirmar cambios.
+- Inicialización modular con `git-project-init`: `VERSION` (`0.0.1`) obligatorio siempre, y todo lo demás opcional (licencia, docs, plantillas, Docker, `autoskills`).
+- Modo en blanco (`--blank` / `--minimal`) ideal para repositorios ligeros o skills de agentes que solo necesitan `VERSION`, `LICENSE` y tags.
+- Diagnóstico y agregado selectivo de archivos faltantes con `git-project-update`.
+- Validación flexible con `git-project-check` (`VERSION` obligatorio, opcionales validados si existen, más modo `--strict`).
+- Releases con Semantic Versioning mediante `git-release`, con `CHANGELOG.md` opcional y creación automática de commits y tags.
+- Instalación y desinstalación (`--uninstall` / `-Uninstall`) compatibles con Linux, macOS y Windows.
 
 ## Plataformas compatibles
 
@@ -29,7 +26,7 @@ Tools-hooks instala hooks globales, valida mensajes con Conventional Commits, pr
 | Windows | `install.ps1` | PowerShell, CMD o Windows Terminal |
 | Windows con Git Bash | `install.sh` o `install.ps1` | Git Bash |
 
-En Windows, los scripts siguen ejecutándose mediante **Git Bash**, pero el instalador de PowerShell crea comandos `.cmd`, por lo que pueden invocarse directamente desde PowerShell, CMD o Windows Terminal.
+En Windows, los scripts se ejecutan mediante **Git Bash**, y `install.ps1` crea wrappers `.cmd` y wrappers Bash con finales de línea `LF` en `%USERPROFILE%\.local\bin`.
 
 ## Requisitos
 
@@ -37,12 +34,12 @@ En Windows, los scripts siguen ejecutándose mediante **Git Bash**, pero el inst
 
 - Git.
 - Bash.
-- Utilidades estándar como `grep`, `sed`, `mktemp`, `date` y `curl`.
+- Utilidades estándar como `awk`, `grep`, `sed`, `mktemp`, `date` y `curl` (opcional para `.gitignore` remoto; incluye respaldo offline).
 
 ### Windows
 
 - Windows 10 o Windows 11.
-- Git for Windows, incluyendo Git Bash.
+- Git for Windows (incluyendo Git Bash).
 - PowerShell 5.1 o superior.
 
 ## Estructura
@@ -52,12 +49,18 @@ Tools-hooks/
 ├── git-hooks/
 │   ├── commit-msg
 │   ├── pre-commit
-│   ├── prepare-commit-msg
-│   └── pre-push
+│   ├── pre-push
+│   └── prepare-commit-msg
 ├── scripts/
+│   ├── lib/
+│   │   ├── common.sh
+│   │   └── generators.sh
 │   ├── project-check.sh
 │   ├── project-init.sh
+│   ├── project-update.sh
 │   └── release.sh
+├── tests/
+│   └── run-tests.sh
 ├── CHANGELOG.md
 ├── install.ps1
 ├── install.sh
@@ -68,77 +71,31 @@ Tools-hooks/
 
 ## Instalación en Linux o macOS
 
-Clona el repositorio:
+Clona el repositorio y ejecuta el instalador:
 
 ```bash
 git clone https://github.com/aldogarciaolvera/Tools-hooks.git
 cd Tools-hooks
-```
-
-Concede permisos de ejecución cuando sea necesario:
-
-```bash
-chmod +x install.sh scripts/*.sh git-hooks/*
-```
-
-Ejecuta el instalador:
-
-```bash
+chmod +x install.sh scripts/*.sh scripts/lib/*.sh git-hooks/*
 ./install.sh
 ```
 
 El instalador:
 
-- configura `core.hooksPath`;
-- instala `git-project-init`;
-- instala `git-project-check`;
-- instala `git-project-update`;
-- instala `git-release`;
-- agrega `~/.local/bin` al `PATH` cuando sea necesario.
-
-Después de instalar, abre una terminal nueva o ejecuta:
-
-```bash
-source ~/.bashrc
-```
-
-En macOS con Zsh, puede ser necesario abrir una terminal nueva o cargar `~/.zshrc`.
+- respalda `core.hooksPath` previo si existía y configura los hooks globales;
+- configura `tools-hooks.root`;
+- enlaza en `~/.local/bin`: `git-project-init`, `git-project-check`, `git-project-update` y `git-release`;
+- agrega `~/.local/bin` al `PATH` cuando hace falta.
 
 ## Instalación en Windows
 
-Primero instala **Git for Windows** y asegúrate de incluir Git Bash.
-
-Después, abre PowerShell y ejecuta:
+Abre PowerShell y ejecuta:
 
 ```powershell
 git clone https://github.com/aldogarciaolvera/Tools-hooks.git
 cd Tools-hooks
-```
-
-Ejecuta el instalador:
-
-```powershell
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
-
-También puedes habilitar temporalmente la ejecución de scripts solo para la sesión actual:
-
-```powershell
-Set-ExecutionPolicy -Scope Process Bypass
-.\install.ps1
-```
-
-El instalador de Windows:
-
-- localiza Git for Windows y Git Bash;
-- configura los hooks globales;
-- crea wrappers `.cmd` en `%USERPROFILE%\.local\bin`;
-- instala:
-  - `git-project-init`;
-  - `git-project-check`;
-  - `git-project-update`;
-  - `git-release`;
-- agrega esa carpeta al `PATH` del usuario.
 
 Cierra y vuelve a abrir PowerShell, CMD o Windows Terminal después de instalar.
 
@@ -154,385 +111,181 @@ where.exe git-release
 
 ## Importante: ubicación del repositorio
 
-No muevas ni elimines la carpeta `Tools-hooks` después de instalar.
-
-Los comandos instalados y `core.hooksPath` apuntan a sus scripts mediante una ruta absoluta. Si cambias la ubicación del repositorio, vuelve a ejecutar el instalador correspondiente:
-
-```bash
-./install.sh
-```
-
-o en Windows:
-
-```powershell
-.\install.ps1
-```
+No muevas ni elimines la carpeta `Tools-hooks` después de instalar. Si la cambias de ruta, vuelve a ejecutar `./install.sh` o `.\install.ps1`.
 
 ## Flujo de trabajo recomendado
 
-### 1. Crear un repositorio
+### Caso A: Plantilla en blanco / Repositorio de skills
+
+Ideal para repositorios ligeros donde solo necesitas control de versiones y tags sin archivos de relleno:
+
+```bash
+mkdir MiSkill
+cd MiSkill
+git init
+git-project-init --minimal --license
+```
+
+Esto crea únicamente:
+
+- `VERSION` (`0.0.1`)
+- `LICENSE` (MIT)
+
+Después puedes hacer tus commits y generar etiquetas de versión directamente con:
+
+```bash
+git-release 0.1.0
+```
+
+### Caso B: Proyecto completo o con plantilla de stack
 
 ```bash
 mkdir MiProyecto
 cd MiProyecto
 git init
+git-project-init -t react --all
 ```
 
-Configura el remoto cuando corresponda:
+O selecciona módulos individuales:
 
 ```bash
-git remote add origin https://github.com/usuario/MiProyecto.git
+git-project-init -v 0.1.0 --license --readme --changelog --gitignore --hooks
 ```
 
-### 2. Inicializar el proyecto
-
-```bash
-git-project-init -v 0.0.1 -t react
-```
-
-*Nota: puedes omitir `-t react` si no necesitas una plantilla base, o cambiarlo por otra tecnología (ej. `astro`, `python`).*
-
-El comando crea, solamente cuando no existan:
-
-```text
-VERSION
-CHANGELOG.md
-LICENSE
-DESIGN.md
-AGENTS.md
-README.md (si no existe)
-.editorconfig
-.prettierrc
-.gitignore (basado en la plantilla)
-Dockerfile (si usas una plantilla)
-.githooks/pre-commit
-.githooks/pre-push
-```
-
-No sobrescribe archivos existentes.
-
-Adicionalmente, se generan dos plantillas para documentar el proyecto:
-- **`DESIGN.md`**: Para documentar la arquitectura, el diseño y las decisiones técnicas.
-- **`AGENTS.md`**: Para definir configuraciones, roles e instrucciones para agentes (por ejemplo, IA o flujos de automatización).
-
-### 3. Trabajar normalmente
-
-```bash
-git add .
-git commit -m "feat(api): agrega autenticación"
-```
-
-Los hooks globales validan el mensaje y delegan las comprobaciones específicas a los hooks del repositorio.
-
-### 4. Validar manualmente
-
-```bash
-git-project-check
-```
-
-### 5. Crear y publicar una versión
-
-```bash
-git-release 1.2.0
-```
-
-El comando:
-
-1. ejecuta `git-project-check`;
-2. comprueba que no existan cambios sin confirmar;
-3. actualiza `VERSION`;
-4. genera una entrada automática en `CHANGELOG.md` agrupando los *features* y *fixes* desde el último tag;
-5. crea el commit de release;
-6. crea el tag anotado `v1.2.0`;
-7. pregunta si deseas publicar;
-8. si aceptas, ejecuta:
-
-```bash
-git push origin <rama-actual>
-git push origin v1.2.0
-```
-
-Si rechazas la publicación, el commit y el tag permanecen creados localmente.
+Si quieres ejecutar `autoskills` (`npx -y autoskills@latest`), actívalo explícitamente con `--skills` (o respondiendo `y` en el asistente interactivo).
 
 ## Comandos disponibles
 
 ### `git-project-init`
 
-Inicializa la estructura mínima de un repositorio.
+Inicializa el repositorio garantizando `VERSION` (`0.0.1` por defecto). Todo lo demás es opcional (por flags o de forma interactiva).
 
 ```bash
-git-project-init
+git-project-init [opciones]
 ```
 
-Usar una versión inicial específica:
+Opciones principales:
 
-```bash
-git-project-init -v 1.0.0
-# o git-project-init --version 1.0.0
-```
+- `-v, --version X.Y.Z`: Versión inicial (por defecto `0.0.1`).
+- `-t, --template TIPO`: `blank` (por defecto), `react`, `astro`, `angular`, `reactnative`, `dotnet`, `python`.
+- `--blank`, `--minimal`: Solo `VERSION` y licencia (sin preguntas de extras).
+- `--license` / `--no-license`: Crear o omitir licencia MIT sin preguntar.
+- `--changelog`: Crea `CHANGELOG.md`.
+- `--readme`: Crea `README.md`.
+- `--docs` (o individuales `--design`, `--agents`, `--architecture`): Documentación de proyecto.
+- `--editorconfig`: Crea `.editorconfig`.
+- `--prettier`: Crea `.prettierrc`.
+- `--gitignore`: Crea o complementa `.gitignore` (usa toptal y cuenta con respaldo local offline).
+- `--docker`: Crea `Dockerfile` y `.dockerignore` (requiere `-t` distinto de `blank`).
+- `--hooks`: Crea `.githooks/pre-commit` y `.githooks/pre-push`.
+- `--skills`: Ejecuta `npx -y autoskills@latest` (desactivado por defecto).
+- `--all`: Activa todos los archivos opcionales (excepto `--skills`).
+- `-y, --yes`: Modo no interactivo.
+- `-h, --help`: Muestra la ayuda.
 
-Crear una licencia MIT sin preguntar:
-
-```bash
-git-project-init --license
-```
-
-No crear una licencia:
-
-```bash
-git-project-init --no-license
-```
-
-Inicializar con una plantilla básica:
-
-```bash
-git-project-init -t react
-# o git-project-init --template react
-```
-
-Tecnologías soportadas: `react` (Vite), `astro`, `angular`, `reactnative` (Expo), `dotnet` (Web API) y `python` (FastAPI). Para frameworks de JS/TS, se utiliza `pnpm` de forma predeterminada.
-Al especificar una plantilla, se genera también un `Dockerfile` base optimizado para esa tecnología.
-
-Mostrar ayuda:
-
-```bash
-git-project-init --help
-```
-
-### `git-project-check`
-
-Comprueba que el proyecto tenga una estructura válida.
-
-```bash
-git-project-check
-```
-
-Entre otras validaciones, revisa:
-
-- que exista `VERSION`;
-- que la versión utilice el formato `MAJOR.MINOR.PATCH`;
-- que exista `CHANGELOG.md`;
-- que el changelog contenga `# Changelog`;
-- que exista `DESIGN.md` y `AGENTS.md`;
-- si existe una licencia;
-- si la licencia detectada parece ser MIT.
-
-El comando devuelve un código distinto de cero cuando encuentra un error bloqueante.
+No sobrescribe archivos existentes.
 
 ### `git-project-update`
 
-Aplica las nuevas reglas de configuración a un repositorio antiguo sin alterar su versión ni su `CHANGELOG`.
+Inspecciona el proyecto, valida qué archivos existen y qué falta, garantiza `VERSION` si no existe (sin modificarlo si ya existe) y te permite agregar selectivamente los archivos opcionales faltantes.
 
 ```bash
-git-project-update
-```
-
-Inyectará archivos como `DESIGN.md`, `AGENTS.md`, `.prettierrc`, y `.editorconfig` si no existían previamente.
-
-### `git-release`
-
-Crea una nueva versión:
-
-```bash
-git-release 1.2.0
-```
-
-La versión debe usar Semantic Versioning:
-
-```text
-MAJOR.MINOR.PATCH
+git-project-update [opciones]
 ```
 
 Ejemplos:
 
-```text
-1.0.0
-1.2.0
-1.2.1
-2.0.0
+```bash
+# Modo diagnóstico + selección interactiva de faltantes
+git-project-update
+
+# Agregar únicamente README y CHANGELOG si faltan
+git-project-update --readme --changelog
+
+# Solo validar estado sin prompts
+git-project-update -y
 ```
 
-Antes de utilizarlo:
+### `git-project-check`
 
-- confirma todos los cambios;
-- asegúrate de tener configurado `origin`;
-- verifica que la rama actual pueda publicarse;
-- usa una versión diferente de la actual.
+Valida la estructura del proyecto:
+
+```bash
+git-project-check [--strict]
+```
+
+- **Obligatorio:** `VERSION` existente y con formato SemVer `MAJOR.MINOR.PATCH`.
+- **Opcionales (se validan si están presentes):** `LICENSE*`, `CHANGELOG.md` (encabezado `# Changelog`), `README.md`, `DESIGN.md`, `AGENTS.md`, `ARCHITECTURE.md`, `.editorconfig`, `.prettierrc`, `.gitignore`, `Dockerfile`, `.dockerignore` y sintaxis de `.githooks/*`.
+- `--strict`: exige además `LICENSE` y `CHANGELOG.md`.
+
+### `git-release`
+
+Genera una nueva versión y su etiqueta Git:
+
+```bash
+git-release [opciones] <version>
+```
+
+Opciones:
+
+- `--changelog`: Crea `CHANGELOG.md` si no existía y agrega la entrada.
+- `--no-changelog`: Actualiza únicamente `VERSION` y el tag.
+- `--push` / `--no-push`: Publica automáticamente o mantiene la release local sin preguntar.
+
+Comportamiento:
+
+1. valida versión SemVer, rama activa (no *detached HEAD*) y árbol limpio;
+2. ejecuta `git-project-check`;
+3. actualiza `VERSION`;
+4. si existe `CHANGELOG.md` (o se pasó `--changelog`), agrupa commits (`Features`, `Bug Fixes`, `Performance`, `Refactoring`, `Documentation`) desde el último tag e inserta la nueva versión debajo de `# Changelog`;
+5. crea el commit `mnto: release X.Y.Z` y el tag anotado `vX.Y.Z`;
+6. si existe el remoto configurado, pregunta si deseas hacer `git push` de la rama y el tag.
 
 ## Hooks instalados
 
 ### `prepare-commit-msg`
 
-Agrega automáticamente las iniciales del autor y la rama actual.
+Agrega automáticamente `[INICIALES] - rama - ` al inicio del mensaje.
 
-Comando:
+- Usa `GIT_AUTHOR_INITIALS` si está definida; si no, deriva las iniciales automáticamente de `git config user.name` (con respaldo `DEV`).
+- Respeta `merge`, `squash`, `Revert`, `fixup!`, `squash!`, `amend!` y mensajes que ya tengan prefijo `[INICIALES] - rama - `.
+- Funciona también durante `rebase -i` o *detached HEAD*.
 
-```bash
-git commit -m "feat: agrega una funcionalidad"
-```
-
-Resultado:
-
-```text
-[AGO] - main - feat: agrega una funcionalidad
-```
-
-Las iniciales pueden personalizarse:
-
-#### Linux/macOS
+Para fijar iniciales manualmente:
 
 ```bash
-export GIT_AUTHOR_INITIALS=ABC
+export GIT_AUTHOR_INITIALS=AGO
 ```
 
-#### Windows PowerShell
-
-Solo para la sesión actual:
+En PowerShell:
 
 ```powershell
-$env:GIT_AUTHOR_INITIALS = "ABC"
-```
-
-De forma persistente para el usuario:
-
-```powershell
-[Environment]::SetEnvironmentVariable(
-    "GIT_AUTHOR_INITIALS",
-    "ABC",
-    "User"
-)
+[Environment]::SetEnvironmentVariable("GIT_AUTHOR_INITIALS", "AGO", "User")
 ```
 
 ### `commit-msg`
 
-Valida que el mensaje utilice Conventional Commits.
+Valida el formato `[INICIALES] - rama - tipo(scope opcional): descripción`.
 
-Formato:
+Tipos permitidos: `feat`, `fix`, `docs`, `refactor`, `test`, `mnto`, `build`, `ci`, `perf`, `style`, `revert` (soporta `!` para *breaking changes*).
 
-```text
-tipo: descripción
-```
+### `pre-commit` y `pre-push`
 
-o:
+- `pre-commit`: valida con `bash -n` el contenido **en stage** de scripts `.sh`, `.bash`, `git-hooks/*`, `.githooks/*` y archivos con shebang shell; después ejecuta `.githooks/pre-commit` si existe.
+- `pre-push`: ejecuta `.githooks/pre-push` si existe.
 
-```text
-tipo(scope): descripción
-```
+## Pruebas y calidad
 
-Ejemplos:
-
-```text
-feat: agrega autenticación JWT
-fix(api): corrige validación de usuarios
-docs(readme): mejora la instalación
-```
-
-### `pre-commit`
-
-Valida la sintaxis de los scripts Bash agregados al commit.
-
-También ejecuta, cuando existe y tiene permisos de ejecución:
-
-```text
-.githooks/pre-commit
-```
-
-### `pre-push`
-
-Ejecuta, cuando existe y tiene permisos de ejecución:
-
-```text
-.githooks/pre-push
-```
-
-Si la validación falla, Git cancela el push.
-
-## Conventional Commits
-
-| Tipo | Descripción | Ejemplo |
-|---|---|---|
-| `feat` | Agrega una funcionalidad. | `feat: agrega exportación a PDF` |
-| `fix` | Corrige un error existente. | `fix: corrige creación de respaldos` |
-| `docs` | Modifica documentación. | `docs: actualiza instalación` |
-| `refactor` | Reestructura sin cambiar comportamiento. | `refactor: simplifica configuración` |
-| `test` | Agrega o modifica pruebas. | `test: agrega pruebas de release` |
-| `mnto` | Tareas generales de mantenimiento. | `mnto: actualiza dependencias` |
-| `build` | Cambios de compilación o empaquetado. | `build: actualiza Dockerfile` |
-| `ci` | Cambios de integración continua. | `ci: agrega GitHub Actions` |
-| `perf` | Mejoras de rendimiento. | `perf: optimiza compresión` |
-| `style` | Cambios de formato sin alterar lógica. | `style: aplica formato` |
-| `revert` | Revierte cambios anteriores. | `revert: revierte cambio de configuración` |
-
-### Scope opcional
-
-El scope identifica la parte afectada:
-
-```text
-feat(auth): agrega autenticación JWT
-fix(mysql): corrige restauración
-docs(readme): mejora documentación
-refactor(config): reorganiza variables
-```
-
-## Validaciones específicas por repositorio
-
-Los hooks globales ejecutan los hooks locales del proyecto cuando existen.
-
-Ejemplo para un proyecto .NET:
+Ejecutar la suite de pruebas automatizadas en Bash / Git Bash:
 
 ```bash
-#!/usr/bin/env bash
-set -Eeuo pipefail
-
-git-project-check
-dotnet test
+bash tests/run-tests.sh
 ```
 
-Ejemplo para Node.js:
+Validar sintaxis manualmente:
 
 ```bash
-#!/usr/bin/env bash
-set -Eeuo pipefail
-
-git-project-check
-npm test
-npm run lint
-```
-
-Guárdalo en:
-
-```text
-.githooks/pre-commit
-```
-
-En Linux/macOS:
-
-```bash
-chmod +x .githooks/pre-commit
-```
-
-En Windows, Git for Windows ejecuta los hooks a través de Git Bash. Conserva el encabezado:
-
-```bash
-#!/usr/bin/env bash
-```
-
-## Comprobación de calidad del proyecto
-
-Validar sintaxis:
-
-```bash
-bash -n install.sh
-bash -n scripts/*.sh
-bash -n git-hooks/*
-```
-
-Ejecutar ShellCheck:
-
-```bash
-shellcheck install.sh
-shellcheck scripts/*.sh
-shellcheck git-hooks/*
+bash -n install.sh scripts/*.sh scripts/lib/*.sh git-hooks/* tests/*.sh
 ```
 
 Validar PowerShell en Windows:
@@ -544,126 +297,30 @@ $errors = $null
     [ref]$null,
     [ref]$errors
 ) | Out-Null
-
 $errors
 ```
-
-Si no muestra errores, la sintaxis de `install.ps1` es válida.
 
 ## Desinstalación
 
 ### Linux/macOS
 
-Quita la configuración global:
-
 ```bash
-git config --global --unset core.hooksPath
+./install.sh --uninstall
 ```
-
-Elimina los comandos:
-
-```bash
-rm -f ~/.local/bin/git-project-init
-rm -f ~/.local/bin/git-project-check
-rm -f ~/.local/bin/git-project-update
-rm -f ~/.local/bin/git-release
-```
-
-Después puedes eliminar el repositorio.
 
 ### Windows
 
-Quita la configuración global:
-
 ```powershell
-git config --global --unset core.hooksPath
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -Uninstall
 ```
 
-Elimina los wrappers:
-
-```powershell
-Remove-Item "$HOME\.local\bin\git-project-init.cmd" -ErrorAction SilentlyContinue
-Remove-Item "$HOME\.local\bin\git-project-check.cmd" -ErrorAction SilentlyContinue
-Remove-Item "$HOME\.local\bin\git-project-update.cmd" -ErrorAction SilentlyContinue
-Remove-Item "$HOME\.local\bin\git-release.cmd" -ErrorAction SilentlyContinue
-```
-
-Opcionalmente elimina `%USERPROFILE%\.local\bin` del `PATH` del usuario si ya no contiene otros comandos.
-
-## Solución de problemas
-
-### `Permission denied` en Linux
-
-Concede permisos:
-
-```bash
-chmod +x install.sh scripts/*.sh git-hooks/*
-```
-
-Después ejecuta nuevamente:
-
-```bash
-./install.sh
-```
-
-### El comando no se encuentra
-
-Abre una terminal nueva.
-
-En Linux también puedes ejecutar:
-
-```bash
-source ~/.bashrc
-```
-
-En Windows revisa:
-
-```powershell
-$env:Path -split ';'
-where.exe git-release
-```
-
-### PowerShell bloquea `install.ps1`
-
-Ejecuta:
-
-```powershell
-Set-ExecutionPolicy -Scope Process Bypass
-.\install.ps1
-```
-
-Esto solamente modifica la política de la sesión actual.
-
-### Se movió la carpeta Tools-hooks
-
-Vuelve a ejecutar el instalador desde la nueva ubicación.
-
-### `git-release` informa que hay cambios sin confirmar
-
-Revisa:
-
-```bash
-git status
-```
-
-Confirma o descarta los cambios antes de volver a ejecutar el release.
-
-### No existe `origin`
-
-Configura el remoto:
-
-```bash
-git remote add origin https://github.com/usuario/repositorio.git
-```
+Ambos restauran un `core.hooksPath` anterior (si había uno respaldado) o lo eliminan, quitan `tools-hooks.root` y borran los comandos instalados en `.local/bin`.
 
 ## Roadmap
 
 - Soporte para más licencias.
-- Plantillas opcionales de README.
-- Configuración por proyecto.
-- Pruebas automatizadas.
-- GitHub Actions.
-- Instalador de desinstalación dedicado.
+- Configuración por proyecto (`.tools-hooksrc`).
+- Integración con GitHub Actions para ejecutar `tests/run-tests.sh` y ShellCheck automáticamente.
 
 ## Licencia
 

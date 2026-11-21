@@ -1,10 +1,9 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-set -Eeuo pipefail
+set -eu
 
 COMMIT_MSG_FILE="$1"
 COMMIT_SOURCE="${2:-}"
-INITIALS="${GIT_AUTHOR_INITIALS:-AGO}"
 
 # No modificar mensajes generados para merge o squash.
 case "$COMMIT_SOURCE" in
@@ -13,33 +12,78 @@ case "$COMMIT_SOURCE" in
         ;;
 esac
 
-# No modificar commits si Git está en detached HEAD.
-BRANCH=$(git symbolic-ref --quiet --short HEAD 2>/dev/null) || exit 0
-
-PREFIX="[$INITIALS] - $BRANCH - "
 FIRST_LINE=$(sed -n '1p' "$COMMIT_MSG_FILE")
 
-# Respetar commits especiales de autosquash.
+# Respetar commits automaticos o especiales.
 case "$FIRST_LINE" in
-    fixup\!*|squash\!*|amend\!*)
+    Merge\ *|Revert\ *|fixup\!*|squash\!*|amend\!*)
         exit 0
         ;;
 esac
 
-# Evitar duplicar el prefijo.
-case "$FIRST_LINE" in
-    "$PREFIX"*)
-        exit 0
-        ;;
-esac
+# Evitar duplicar el prefijo si el mensaje ya cumple "[INICIALES] - rama - ...".
+if printf '%s\n' "$FIRST_LINE" | grep -Eq '^\[[A-Za-z0-9_-]+\] - [^ ]+ - '; then
+    exit 0
+fi
 
-TEMP_FILE="${COMMIT_MSG_FILE}.tmp"
+resolve_initials() {
+    if [ -n "${GIT_AUTHOR_INITIALS:-}" ]; then
+        printf '%s\n' "$GIT_AUTHOR_INITIALS"
+        return
+    fi
+
+    user_name=$(git config --get user.name 2>/dev/null || true)
+    if [ -n "$user_name" ]; then
+        derived=$(printf '%s' "$user_name" \
+            | tr -cs '[:alnum:]' ' ' \
+            | awk '{ out=""; for (i=1; i<=NF; i++) out = out toupper(substr($i,1,1)); print out }')
+        if [ -n "$derived" ]; then
+            printf '%s\n' "$derived"
+            return
+        fi
+    fi
+
+    printf 'DEV\n'
+}
+
+resolve_branch() {
+    branch=$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)
+    if [ -n "$branch" ]; then
+        printf '%s\n' "$branch"
+        return
+    fi
+
+    rebase_head=""
+    for candidate in rebase-merge/head-name rebase-apply/head-name; do
+        git_path=$(git rev-parse --git-path "$candidate" 2>/dev/null || true)
+        if [ -n "$git_path" ] && [ -f "$git_path" ]; then
+            rebase_head=$(sed -n '1p' "$git_path")
+            rebase_head=${rebase_head#refs/heads/}
+            if [ -n "$rebase_head" ]; then
+                printf '%s\n' "$rebase_head"
+                return
+            fi
+        fi
+    done
+
+    printf 'detached\n'
+}
+
+INITIALS=$(resolve_initials)
+BRANCH=$(resolve_branch)
+PREFIX="[$INITIALS] - $BRANCH - "
+
+TEMP_FILE=$(mktemp "${COMMIT_MSG_FILE}.XXXXXX")
+cleanup() {
+    rm -f -- "$TEMP_FILE"
+}
+trap cleanup EXIT
 
 {
     printf '%s' "$PREFIX"
     cat "$COMMIT_MSG_FILE"
 } > "$TEMP_FILE"
 
-mv "$TEMP_FILE" "$COMMIT_MSG_FILE"
+mv -- "$TEMP_FILE" "$COMMIT_MSG_FILE"
 
 exit 0

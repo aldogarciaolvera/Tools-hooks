@@ -1,40 +1,61 @@
 #!/bin/sh
 
-set -u
+set -eu
 
 printf '%s\n' "Ejecutando validaciones pre-commit..."
 
 FAILED=0
 
-# Obtener scripts shell agregados o modificados en el commit.
-STAGED_SHELL_FILES=$(
-    git diff --cached \
-        --name-only \
-        --diff-filter=ACMR \
-    | grep -E '\.(sh|bash)$' || true
-)
+is_shell_script() {
+    file_path="$1"
 
-for FILE in $STAGED_SHELL_FILES; do
-    if [ ! -f "$FILE" ]; then
-        continue
-    fi
+    case "$file_path" in
+        *.sh|*.bash|git-hooks/*|.githooks/*)
+            return 0
+            ;;
+    esac
 
-    printf 'Validando sintaxis: %s\n' "$FILE"
+    first_line=$(git show ":$file_path" 2>/dev/null | head -c 128 | tr -d '\000\r' | sed -n '1p' || true)
+    case "$first_line" in
+        '#!'*'/sh'*|'#!'*'/bash'*|'#!'*' sh'*|'#!'*' bash'*)
+            return 0
+            ;;
+    esac
 
-    if ! bash -n "$FILE"; then
-        printf 'ERROR: Sintaxis inválida en %s\n' "$FILE" >&2
-        FAILED=1
-    fi
-done
+    return 1
+}
 
-# Ejecutar validación particular del repositorio cuando exista.
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR || true)
+
+if [ -n "$STAGED_FILES" ]; then
+    while IFS= read -r FILE; do
+        [ -n "$FILE" ] || continue
+
+        if ! is_shell_script "$FILE"; then
+            continue
+        fi
+
+        printf 'Validando sintaxis (staged): %s\n' "$FILE"
+
+        if ! git show ":$FILE" | bash -n; then
+            printf 'ERROR: Sintaxis invalida en %s\n' "$FILE" >&2
+            FAILED=1
+        fi
+    done <<EOF
+$STAGED_FILES
+EOF
+fi
+
+# Ejecutar validacion particular del repositorio cuando exista.
 if [ -x ".githooks/pre-commit" ]; then
     printf '%s\n' "Ejecutando .githooks/pre-commit..."
     ./.githooks/pre-commit || FAILED=1
+elif [ -f ".githooks/pre-commit" ]; then
+    printf 'AVISO: .githooks/pre-commit existe pero no tiene permisos de ejecucion.\n' >&2
 fi
 
 if [ "$FAILED" -ne 0 ]; then
-    printf '%s\n' "Commit cancelado por errores de validación." >&2
+    printf '%s\n' "Commit cancelado por errores de validacion." >&2
     exit 1
 fi
 

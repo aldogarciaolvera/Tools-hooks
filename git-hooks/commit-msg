@@ -1,9 +1,11 @@
 #!/bin/sh
 
+set -eu
+
 COMMIT_MSG_FILE="$1"
 FIRST_LINE=$(sed -n '1p' "$COMMIT_MSG_FILE")
 
-# Permitir commits automáticos.
+# Permitir commits automaticos.
 case "$FIRST_LINE" in
     Merge\ *|Revert\ *|fixup\!*|squash\!*|amend\!*)
         exit 0
@@ -11,8 +13,8 @@ case "$FIRST_LINE" in
 esac
 
 # Formato esperado:
-# [AGO] - rama - tipo: descripción
-PATTERN='^\[[A-Za-z0-9_-]+\] - [^ ]+ - (feat|fix|docs|refactor|test|mnto|build|ci|perf|style|revert)(\([A-Za-z0-9._/-]+\))?!?: .+'
+# [INICIALES] - rama - tipo(scope): descripcion
+PATTERN='^\[[A-Za-z0-9_-]+\] - [^ ]+ - (feat|fix|docs|refactor|test|mnto|build|ci|perf|style|revert)(\([A-Za-z0-9._/,-]+\))?!?: .+'
 
 if ! printf '%s\n' "$FIRST_LINE" | grep -Eq "$PATTERN"; then
     cat >&2 <<'EOF'
@@ -21,14 +23,14 @@ ERROR: El mensaje del commit no cumple el formato requerido.
 
 Formato:
 
-  [INICIALES] - rama - tipo: descripción
+  [INICIALES] - rama - tipo: descripcion
 
 Ejemplos:
 
   [TUS_INICIALES] - main - feat: agrega respaldo remoto
-  [TUS_INICIALES] - develop - fix: corrige validación SHA-256
+  [TUS_INICIALES] - develop - fix: corrige validacion SHA-256
   [TUS_INICIALES] - main - docs: actualiza README
-  [TUS_INICIALES] - main - feat(postgres): agrega restauración selectiva
+  [TUS_INICIALES] - main - feat(postgres): agrega restauracion selectiva
 
 Tipos permitidos:
 

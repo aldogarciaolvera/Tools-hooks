@@ -1,51 +1,51 @@
+# Changelog
+
+Todos los cambios relevantes de este proyecto se documentarán en este archivo.
+
+El formato está basado en Keep a Changelog y el proyecto utiliza Semantic Versioning.
+
 ## [1.4.4] - 2026-09-11
 
 ### Features
 
-- feat: typescript react-native
+- typescript react-native
 
 ## [1.4.3] - 2026-08-20
 
 ### Features
 
-- feat: Actualizacion
-- feat: Arquitectura
+- Actualización
+- Arquitectura
 
 ## [1.4.2] - 2026-08-20
 
 ### Bug Fixes
 
-- fix: Quitar acentos
+- Quitar acentos
 
 ## [1.4.1] - 2026-08-20
 
 ### Features
 
-- feat: abreviatura
+- abreviatura
 
 ## [1.4.0] - 2026-08-20
 
 ### Features
 
-- feat: Archivos restantes
-- feat: Update
+- Archivos restantes
+- Update
 
 ### Bug Fixes
 
-- fix: Ejecucion prematura
+- Ejecución prematura
 
 ## [1.3.2] - 2026-07-22
 
 ### Changed
 
+- Reemplazado el tipo de commit `chore` por `mnto` para mantener consistencia en español en hooks y documentación.
 - Preparación de la versión 1.3.2.
-
-## 1.3.2
-
-### Changed
-
-- Replaced the `chore` commit type with `mnto` to use Spanish terminology consistently across the project.
-- Updated commit validation hooks and documentation accordingly.
 
 ## [1.3.1] - 2026-07-21
 
@@ -64,12 +64,6 @@
 ### Changed
 
 - Preparación de la versión 1.2.0.
-
-# Changelog
-
-Todos los cambios relevantes de este proyecto se documentarán en este archivo.
-
-El formato está basado en Keep a Changelog y el proyecto utiliza Semantic Versioning.
 
 ## [1.1.0] - 2026-07-21
 

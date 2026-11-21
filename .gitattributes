@@ -1,6 +1,7 @@
 * text=auto
 
 *.sh text eol=lf
+*.md text eol=lf
 git-hooks/* text eol=lf
 .githooks/* text eol=lf
 

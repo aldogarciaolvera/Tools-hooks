@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 
 set -Eeuo pipefail
 
@@ -9,7 +9,23 @@ TOOLS_HOOKS_DIR="$(
 
 HOOKS_DIR="$TOOLS_HOOKS_DIR/git-hooks"
 SCRIPTS_DIR="$TOOLS_HOOKS_DIR/scripts"
+LIB_DIR="$SCRIPTS_DIR/lib"
 LOCAL_BIN="$HOME/.local/bin"
+
+ACTION="install"
+PATH_WAS_CONFIGURED=0
+
+normalize_git_path() {
+    local p="$1"
+    if command -v cygpath >/dev/null 2>&1; then
+        cygpath -m "$p"
+    else
+        printf '%s\n' "$p"
+    fi
+}
+
+HOOKS_GIT_PATH="$(normalize_git_path "$HOOKS_DIR")"
+ROOT_GIT_PATH="$(normalize_git_path "$TOOLS_HOOKS_DIR")"
 
 show_help() {
     cat <<'EOF'
@@ -17,6 +33,7 @@ Uso:
   ./install.sh [opciones]
 
 Opciones:
+  --uninstall   Desinstala hooks y enlaces creados por Tools-hooks.
   -h, --help    Muestra esta ayuda.
 
 El instalador realiza unicamente estas acciones:
@@ -42,6 +59,9 @@ parse_arguments() {
     fi
 
     case "$1" in
+        --uninstall)
+            ACTION="uninstall"
+            ;;
         -h|--help)
             show_help
             exit 0
@@ -66,6 +86,8 @@ validate_files() {
         "$HOOKS_DIR/commit-msg"
         "$HOOKS_DIR/pre-commit"
         "$HOOKS_DIR/pre-push"
+        "$LIB_DIR/common.sh"
+        "$LIB_DIR/generators.sh"
         "$SCRIPTS_DIR/project-init.sh"
         "$SCRIPTS_DIR/project-check.sh"
         "$SCRIPTS_DIR/project-update.sh"
@@ -90,8 +112,16 @@ install_hooks() {
         "$HOOKS_DIR/pre-commit" \
         "$HOOKS_DIR/pre-push"
 
-    git config --global core.hooksPath "$HOOKS_DIR"
-    git config --global tools-hooks.root "$TOOLS_HOOKS_DIR"
+    local previous_hooks_path
+    previous_hooks_path="$(git config --global --get core.hooksPath || true)"
+    if [[ -n "$previous_hooks_path" && "$previous_hooks_path" != "$HOOKS_GIT_PATH" && "$previous_hooks_path" != "$HOOKS_DIR" ]]; then
+        printf 'AVISO: core.hooksPath ya apuntaba a: %s\n' "$previous_hooks_path" >&2
+        printf '       Se respalda en git config tools-hooks.previous-hooks-path.\n' >&2
+        git config --global tools-hooks.previous-hooks-path "$previous_hooks_path"
+    fi
+
+    git config --global core.hooksPath "$HOOKS_GIT_PATH"
+    git config --global tools-hooks.root "$ROOT_GIT_PATH"
 
     local configured_hooks_path
     configured_hooks_path="$(
@@ -99,11 +129,11 @@ install_hooks() {
         true
     )"
 
-    [[ "$configured_hooks_path" == "$HOOKS_DIR" ]] ||
+    [[ "$configured_hooks_path" == "$HOOKS_GIT_PATH" ]] ||
         die "No se pudo configurar core.hooksPath"
 
     printf 'Hooks globales instalados en:\n'
-    printf '  %s\n' "$HOOKS_DIR"
+    printf '  %s\n' "$HOOKS_GIT_PATH"
 }
 
 detect_shell_config() {
@@ -137,6 +167,7 @@ configure_path() {
     touch "$shell_config"
 
     if [[ ":$PATH:" == *":$LOCAL_BIN:"* ]]; then
+        PATH_WAS_CONFIGURED=1
         printf '%s ya esta incluido en PATH.\n' "$LOCAL_BIN"
         return 0
     fi
@@ -165,7 +196,7 @@ install_command() {
 
     ln -sfn "$source_file" "$target_file"
 
-    [[ -L "$target_file" ]] ||
+    [[ -L "$target_file" || -f "$target_file" ]] ||
         die "No se pudo crear el enlace para $command_name"
 
     printf '  %-20s -> %s\n' \
@@ -178,21 +209,10 @@ install_commands() {
 
     printf 'Instalando comandos globales:\n'
 
-    install_command \
-        "$SCRIPTS_DIR/project-init.sh" \
-        "git-project-init"
-
-    install_command \
-        "$SCRIPTS_DIR/project-check.sh" \
-        "git-project-check"
-
-    install_command \
-        "$SCRIPTS_DIR/project-update.sh" \
-        "git-project-update"
-
-    install_command \
-        "$SCRIPTS_DIR/release.sh" \
-        "git-release"
+    install_command "$SCRIPTS_DIR/project-init.sh" "git-project-init"
+    install_command "$SCRIPTS_DIR/project-check.sh" "git-project-check"
+    install_command "$SCRIPTS_DIR/project-update.sh" "git-project-update"
+    install_command "$SCRIPTS_DIR/release.sh" "git-release"
 }
 
 verify_installation() {
@@ -210,53 +230,43 @@ verify_installation() {
         if [[ -x "$LOCAL_BIN/$command_name" ]]; then
             printf 'OK: %s\n' "$LOCAL_BIN/$command_name"
         else
-            printf 'ERROR: No se pudo instalar %s\n' \
-                "$command_name" >&2
+            printf 'ERROR: No se pudo instalar %s\n' "$command_name" >&2
             failed=1
         fi
     done
+
     local hooks_path
     local configured_root
 
-    hooks_path="$(
-        git config --global --get core.hooksPath ||
-        true
-    )"
-
-    if [[ "$hooks_path" == "$HOOKS_DIR" ]]; then
+    hooks_path="$(git config --global --get core.hooksPath || true)"
+    if [[ "$hooks_path" == "$HOOKS_GIT_PATH" ]]; then
         printf 'OK: core.hooksPath=%s\n' "$hooks_path"
     else
         printf 'ERROR: core.hooksPath no esta configurado correctamente.\n' >&2
         failed=1
     fi
 
-    configured_root="$(
-        git config --global --get tools-hooks.root ||
-        true
-    )"
-
-    if [[ "$configured_root" == "$TOOLS_HOOKS_DIR" ]]; then
+    configured_root="$(git config --global --get tools-hooks.root || true)"
+    if [[ "$configured_root" == "$ROOT_GIT_PATH" ]]; then
         printf 'OK: tools-hooks.root=%s\n' "$configured_root"
     else
         printf 'ERROR: tools-hooks.root no esta configurado correctamente.\n' >&2
         failed=1
-    fi 
-    
+    fi
+
     [[ "$failed" -eq 0 ]] ||
         die "La instalacion no pudo verificarse correctamente"
 }
 
 print_summary() {
     local shell_config
-
     shell_config="$(detect_shell_config)"
 
     printf '\n'
     printf 'Instalacion completada correctamente.\n'
 
     printf '\nConfiguracion global:\n'
-    printf '  Hooks:   %s\n' \
-        "$(git config --global --get core.hooksPath)"
+    printf '  Hooks:    %s\n' "$(git config --global --get core.hooksPath)"
     printf '  Binarios: %s\n' "$LOCAL_BIN"
 
     printf '\nComandos disponibles:\n'
@@ -265,7 +275,7 @@ print_summary() {
     printf '  git-project-update\n'
     printf '  git-release\n'
 
-    if [[ ":$PATH:" != *":$LOCAL_BIN:"* ]]; then
+    if [[ "$PATH_WAS_CONFIGURED" -eq 0 ]]; then
         printf '\nPara actualizar la terminal actual ejecuta:\n'
         printf '  source %s\n' "$shell_config"
     else
@@ -273,9 +283,52 @@ print_summary() {
     fi
 }
 
+uninstall_tools_hooks() {
+    printf 'Desinstalando Tools-hooks...\n\n'
+
+    local current_hooks
+    local previous_hooks
+    current_hooks="$(git config --global --get core.hooksPath || true)"
+    previous_hooks="$(git config --global --get tools-hooks.previous-hooks-path || true)"
+
+    if [[ "$current_hooks" == "$HOOKS_GIT_PATH" || "$current_hooks" == "$HOOKS_DIR" ]]; then
+        if [[ -n "$previous_hooks" ]]; then
+            git config --global core.hooksPath "$previous_hooks"
+            printf 'Restaurado core.hooksPath anterior: %s\n' "$previous_hooks"
+        else
+            git config --global --unset core.hooksPath || true
+            printf 'Eliminado core.hooksPath global.\n'
+        fi
+    fi
+
+    git config --global --unset tools-hooks.root 2>/dev/null || true
+    git config --global --unset tools-hooks.previous-hooks-path 2>/dev/null || true
+
+    local command_name
+    for command_name in \
+        git-project-init \
+        git-project-check \
+        git-project-update \
+        git-release
+    do
+        if [[ -L "$LOCAL_BIN/$command_name" || -f "$LOCAL_BIN/$command_name" ]]; then
+            rm -f -- "$LOCAL_BIN/$command_name"
+            printf 'Eliminado: %s\n' "$LOCAL_BIN/$command_name"
+        fi
+    done
+
+    printf '\nDesinstalacion completada.\n'
+}
+
 main() {
     parse_arguments "$@"
     validate_dependencies
+
+    if [[ "$ACTION" == "uninstall" ]]; then
+        uninstall_tools_hooks
+        exit 0
+    fi
+
     validate_files
 
     printf 'Instalando Tools Hooks...\n\n'
